@@ -4,7 +4,7 @@ from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.utils.data import DataLoader
 
-from model.constants import *
+from constants import *
 
 
 def train(dataset, model, name):
@@ -184,42 +184,42 @@ def train(dataset, model, name):
         val_accs_chords.append(ep_val_chord_acc)
         val_accs_melodies.append(ep_val_melody_acc)
 
-        fig, axs = plot.subplots(2, 2, figsize=(8, 4.5), dpi=200)
-        # Chords loss
-        axs[0, 0].set_title('Chords loss')
-        axs[0, 0].plot(epochs, train_losses_chords, label='Train', color='royalblue')
-        axs[0, 0].plot(epochs, val_losses_chords, label='Val', color='royalblue', linestyle='dotted')
-        axs[0, 0].set_xlabel('Epochs')
-        axs[0, 0].set_ylabel('Loss')
-        axs[0, 0].legend()
-        axs[0, 0].grid(True)
-        # Chords accuracy
-        axs[1, 0].set_title('Chords accuracy')
-        axs[1, 0].plot(epochs, train_accs_chords, label='Train', color='darkorange')
-        axs[1, 0].plot(epochs, val_accs_chords, label='Val', color='darkorange', linestyle='dotted')
-        axs[1, 0].set_xlabel('Epochs')
-        axs[1, 0].set_ylabel('Accuracy (%)')
-        axs[1, 0].set_ylim(bottom=0)
-        axs[1, 0].legend()
-        axs[1, 0].grid(True)
-        # Melody loss
-        axs[0, 1].set_title('Melody loss')
-        axs[0, 1].plot(epochs, train_losses_melodies, label='Train', color='royalblue')
-        axs[0, 1].plot(epochs, val_losses_melodies, label='Val', color='royalblue', linestyle='dotted')
-        axs[0, 1].set_xlabel('Epochs')
-        axs[0, 1].set_ylabel('Loss')
-        axs[0, 1].legend()
-        axs[0, 1].grid(True)
-        # Melody accuracy
-        axs[1, 1].set_title('Melody accuracy')
-        axs[1, 1].plot(epochs, train_accs_melodies, label='Train', color='darkorange')
-        axs[1, 1].plot(epochs, val_accs_melodies, label='Val', color='darkorange', linestyle='dotted')
-        axs[1, 1].set_xlabel('Epochs')
-        axs[1, 1].set_ylabel('Accuracy (%)')
-        axs[1, 1].set_ylim(bottom=0)
-        axs[1, 1].legend()
-        axs[1, 1].grid(True)
+        # fig, axs = plot.subplots(2, 2, figsize=(8, 4.5), dpi=200)
+        # # Chords loss
+        # axs[0, 0].set_title('Chords loss')
+        # axs[0, 0].plot(epochs, train_losses_chords, label='Train', color='royalblue')
+        # axs[0, 0].plot(epochs, val_losses_chords, label='Val', color='royalblue', linestyle='dotted')
+        # axs[0, 0].set_xlabel('Epochs')
+        # axs[0, 0].set_ylabel('Loss')
+        # axs[0, 0].legend()
+        # axs[0, 0].grid(True)
+        # # Chords accuracy
+        # axs[1, 0].set_title('Chords accuracy')
+        # axs[1, 0].plot(epochs, train_accs_chords, label='Train', color='darkorange')
+        # axs[1, 0].plot(epochs, val_accs_chords, label='Val', color='darkorange', linestyle='dotted')
+        # axs[1, 0].set_xlabel('Epochs')
+        # axs[1, 0].set_ylabel('Accuracy (%)')
+        # axs[1, 0].set_ylim(bottom=0)
+        # axs[1, 0].legend()
+        # axs[1, 0].grid(True)
+        # # Melody loss
+        # axs[0, 1].set_title('Melody loss')
+        # axs[0, 1].plot(epochs, train_losses_melodies, label='Train', color='royalblue')
+        # axs[0, 1].plot(epochs, val_losses_melodies, label='Val', color='royalblue', linestyle='dotted')
+        # axs[0, 1].set_xlabel('Epochs')
+        # axs[0, 1].set_ylabel('Loss')
+        # axs[0, 1].legend()
+        # axs[0, 1].grid(True)
+        # # Melody accuracy
+        # axs[1, 1].set_title('Melody accuracy')
+        # axs[1, 1].plot(epochs, train_accs_melodies, label='Train', color='darkorange')
+        # axs[1, 1].plot(epochs, val_accs_melodies, label='Val', color='darkorange', linestyle='dotted')
+        # axs[1, 1].set_xlabel('Epochs')
+        # axs[1, 1].set_ylabel('Accuracy (%)')
+        # axs[1, 1].set_ylim(bottom=0)
+        # axs[1, 1].legend()
+        # axs[1, 1].grid(True)
 
-        plot.tight_layout()
-        plot.savefig(f"{name}.png")
-        plot.show()
+        # plot.tight_layout()
+        # plot.savefig(f"{name}.png")
+        # plot.show()
