@@ -14,7 +14,7 @@
     <a href="https://lofi.jacobzhang.de/?default"><strong>Hear the results »</strong></a>
     <br />
     <br />
-    <p align="center">Fork of [jacbz/Lofi](https://github.com/jacbz/Lofi)</p>
+    <p align="center">Fork of <a href="https://github.com/jacbz/Lofi"><strong>jacbz/Lofi</strong></a></p>
   </p>
 </div>
 
