@@ -62,9 +62,17 @@ if __name__ == "__main__":
 
     print(f"Loaded {lofi2lofi_checkpoint}.")
     lofi2lofi_model.to(device)
-    lofi2lofi_model.eval()
 
-    mu = torch.randn(1, HIDDEN_SIZE)
-    out = decode(lofi2lofi_model, mu)
-    with open("output.json", "w") as f:
-        json.dump(out.__dict__, f)
+
+    out_num = input("Input the number of output : ")
+    out_num = int(out_num)
+
+    for i in range(out_num):
+        lofi2lofi_model.eval()
+        mu = torch.randn(1, HIDDEN_SIZE)
+        out = decode(lofi2lofi_model, mu)
+
+        file_name = 'midi_out/output_' + str(i) + '.json'
+
+        with open(file_name, "w") as f:
+            json.dump(out.__dict__, f)
