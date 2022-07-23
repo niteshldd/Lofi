@@ -109,8 +109,12 @@ def decode(file_path: str, main_program: int, chord_program: int, octave=3):
     str_pitch_scales = [None] + [note+str(octave) for note in scale] + [note+str(octave+1) for note in scale]
 
     chords = json_content["chords"]
+
     for index, chord in enumerate(chords):
-        chords[index] = [str_pitch_scales[t] for t in range(chord, chord+5, 2)]
+        if chord == 0 or chord >= 8:
+            chords[index] = None
+        else:
+            chords[index] = [str_pitch_scales[t] for t in range(chord, chord+5, 2)]
 
     bpm = json_content["bpm"]
     melodies = json_content["melodies"]
@@ -142,16 +146,16 @@ def decode(file_path: str, main_program: int, chord_program: int, octave=3):
 
     tick = 0
     for chord in chords:
-        # TODO: If it's 0 or 8, consider it.
-        for note in chord:
-            chord_instrument.notes.append(
-                pretty_midi.Note(
-                    velocity=70,
-                    pitch=lm.str2midi(note),
-                    start=tick,
-                    end = tick + bar_interval*8
+        if chord:
+            for note in chord:
+                chord_instrument.notes.append(
+                    pretty_midi.Note(
+                        velocity=70,
+                        pitch=lm.str2midi(note),
+                        start=tick,
+                        end = tick + bar_interval*8
+                    )
                 )
-            )
         tick += bar_interval*8
 
     midi.instruments.append(main_instrument)
