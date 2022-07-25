@@ -9,6 +9,7 @@ import wandb
 
 from constants import *
 
+
 def train(dataset, model, name, emoton_name):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
@@ -167,8 +168,10 @@ def train(dataset, model, name, emoton_name):
                       f"V: {loss_valence:.3f} + E: {loss_energy:.3f})")
 
         # copy old model
-        save_name = os.path.join("weights", emoton_name, f"{name}-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}.pth")
-        decoder_save_name = os.path.join("weights", emoton_name, f"{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth")
+        save_name = os.path.join(
+            "weights", emoton_name, f"{name}-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}.pth")
+        decoder_save_name = os.path.join(
+            "weights", emoton_name, f"{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth")
         torch.save(model.state_dict(), save_name)
         torch.save(model.decoder.state_dict(), decoder_save_name)
         # epoch += 1
@@ -194,15 +197,15 @@ def train(dataset, model, name, emoton_name):
                              len(ep_val_tp_melodies)) * 100
 
         wandb.log({"train_loss_chord": ep_train_loss_chord,
-                   "train_loss_melody":ep_train_loss_melody,
-                   "train_loss_kl":ep_train_loss_kl,
-                   "train_chord_acc":ep_train_chord_acc,
-                   "train_melody_acc":ep_train_melody_acc,
+                   "train_loss_melody": ep_train_loss_melody,
+                   "train_loss_kl": ep_train_loss_kl,
+                   "train_chord_acc": ep_train_chord_acc,
+                   "train_melody_acc": ep_train_melody_acc,
                    "val_loss_chord": ep_val_loss_chord,
-                   "val_loss_melody":ep_val_loss_melody,
-                   "val_loss_kl":ep_val_loss_kl,
-                   "val_chord_acc":ep_val_chord_acc,
-                   "val_melody_acc":ep_val_melody_acc,
+                   "val_loss_melody": ep_val_loss_melody,
+                   "val_loss_kl": ep_val_loss_kl,
+                   "val_chord_acc": ep_val_chord_acc,
+                   "val_melody_acc": ep_val_melody_acc,
                    })
 
         print(
