@@ -3,13 +3,13 @@ import torch
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.utils.data import DataLoader
+import os
 
 import wandb
 
 from constants import *
 
-
-def train(dataset, model, name):
+def train(dataset, model, name, emoton_name):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
 
@@ -102,13 +102,14 @@ def train(dataset, model, name):
         return loss_total, loss_chords, loss_kl, loss_melody, loss_tempo, loss_key, loss_mode, loss_valence, loss_energy, tp_chords, tp_melodies
 
     print(f"Starting training: {name}")
-    epoch = 0
+    EPOCH = 500
 
-    run = wandb.init(project="LoFi-VAE")
+    run = wandb.init(project="LoFi-VAE", name=emoton_name)
     wandb.watch(model, log_freq=100)
 
-    while True:
-        epochs.append(epoch)
+    for epoch in range(EPOCH):
+        epoch += 1
+        # epochs.append(epoch)
 
         print(f"== Epoch {epoch} ==")
         ep_train_losses_chords, ep_train_losses_melodies, ep_train_losses_kl, ep_train_tp_chords, ep_train_tp_melodies = [], [], [], [], []
@@ -166,11 +167,11 @@ def train(dataset, model, name):
                       f"V: {loss_valence:.3f} + E: {loss_energy:.3f})")
 
         # copy old model
-        save_name = f"/weights/{name}-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}.pth"
-        decoder_save_name = f"/weights/{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth"
+        save_name = os.path.join("weights", emoton_name, f"{name}-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}.pth")
+        decoder_save_name = os.path.join("weights", emoton_name, f"{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth")
         torch.save(model.state_dict(), save_name)
         torch.save(model.decoder.state_dict(), decoder_save_name)
-        epoch += 1
+        # epoch += 1
 
         ep_train_loss_chord = sum(
             ep_train_losses_chords) / len(ep_train_losses_chords)
