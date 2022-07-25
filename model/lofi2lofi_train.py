@@ -1,11 +1,22 @@
 import os
 import argparse
+import torch
+import numpy as np
 
 from lofi2lofi_dataset import Lofi2LofiDataset
 from lofi2lofi_model import Lofi2LofiModel
 from train import train
 
+def Set_Seed(myseed = 1520):
+    np.random.seed(myseed)
+
+    torch.manual_seed(myseed)
+    torch.cuda.manual_seed(myseed)
+    torch.cuda.manual_seed_all(myseed)
+
 if __name__ == '__main__':
+
+    Set_Seed()
     parser = argparse.ArgumentParser()
     parser.add_argument("--emotion", type=str, default="Happy", help="Input emotion for training: Happy, Angry, Relaxed, Sad")
     args = parser.parse_args()
