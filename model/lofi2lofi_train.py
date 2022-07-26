@@ -14,9 +14,24 @@ def Set_Seed(myseed = 1520):
     torch.cuda.manual_seed(myseed)
     torch.cuda.manual_seed_all(myseed)
 
+def Check_Folder():
+    emo_list = ["Happy", "Angry", "Relaxed", "Sad"]
+    weights_folder = 'weights'
+
+    if not os.path.exists(weights_folder):
+        os.mkdir(weights_folder)
+        print("Create the weights folder !")
+        for emo in emo_list:
+            folder = os.path.join(weights_folder, emo)
+            if not os.path.exists(folder):
+                print("Create the " + emo + " folder !")
+                os.mkdir(folder)
+
 if __name__ == '__main__':
 
+    Check_Folder()
     Set_Seed()
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--emotion", type=str, default="Happy", help="Input emotion for training: Happy, Angry, Relaxed, Sad")
     args = parser.parse_args()
