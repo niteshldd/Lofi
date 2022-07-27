@@ -1,7 +1,10 @@
-from lofi2lofi_model import Decoder as Lofi2LofiDecoder
 import torch
 import json
 import jsonpickle
+import argparse
+import os
+
+from lofi2lofi_model import Decoder as Lofi2LofiDecoder
 from constants import *
 
 device = "cpu"
@@ -55,7 +58,12 @@ def generate(model):
     return decode(model, mu)
 
 if __name__ == "__main__":
-    lofi2lofi_checkpoint = "weights/lofi2lofi-decoder-epoch1900.pth"
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-w', "--weight", required=True, help="Path of pytorch weight")
+    parser.add_argument('-n', "--out_num", default=1, type=int, help="Number of output file")
+    args = parser.parse_args()
+
+    lofi2lofi_checkpoint = args.weight
     print("Loading lofi model...", end=" ")
     lofi2lofi_model = Lofi2LofiDecoder(device=device)
     lofi2lofi_model.load_state_dict(torch.load(lofi2lofi_checkpoint, map_location=device))
@@ -63,16 +71,15 @@ if __name__ == "__main__":
     print(f"Loaded {lofi2lofi_checkpoint}.")
     lofi2lofi_model.to(device)
 
-
-    out_num = input("Input the number of output : ")
-    out_num = int(out_num)
+    out_num = args.out_num 
 
     for i in range(out_num):
         lofi2lofi_model.eval()
         mu = torch.randn(1, HIDDEN_SIZE)
         out = decode(lofi2lofi_model, mu)
 
-        file_name = 'midi_out/output_' + str(i) + '.json'
+        file_name = 'output_' + str(i) + '.json'
+        file_path = os.path.join('midi_out', file_name)
 
-        with open(file_name, "w") as f:
+        with open(file_path, "w") as f:
             json.dump(out.__dict__, f)
