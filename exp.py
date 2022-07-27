@@ -1,14 +1,44 @@
 #%%
-import os
-from glob import glob
-import json
+from cProfile import label
 from inference import inference
+
+import os
+import numpy as np
+import json
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+
+#%%
+def list_to_np(emotion_list:list):
+    np_list = np.array(emotion_list)
+    x = np_list[:, 0]
+    y = np_list[:, 1]
+
+    return x, y
+
+def plot_graph(emotion_dict:dict):
+    fig = plt.figure()    
+
+    x1, y1 = list_to_np(emotion_dict['Happy'])
+    x2, y2 = list_to_np(emotion_dict['Angry'])
+    x3, y3 = list_to_np(emotion_dict['Relaxed'])
+    x4, y4 = list_to_np(emotion_dict['Sad'])
+
+    plt.xlabel("Valence")
+    plt.ylabel("Energy")
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+
+    plt.scatter(x1, y1, c='r', label='Happy')
+    plt.scatter(x2, y2, c='b', label='Angry')
+    plt.scatter(x3, y3, c='g', label='Relaxed')
+    plt.scatter(x4, y4, c='k', label='Sad')
+    plt.show()
 
 #%%
 if __name__ == "__main__":
 
-    output_num = 10
+    output_num = 100
 
     weight_base = os.path.join("model", "weights")
 
@@ -39,5 +69,8 @@ if __name__ == "__main__":
 
             emotion_list = [valence, energy]
             output_dict[emotion_name[i]].append(emotion_list)
+
+#%%
+plot_graph(output_dict)
 
 #%%
