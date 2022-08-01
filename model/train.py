@@ -10,7 +10,7 @@ import wandb
 
 from constants import *
 
-def train(dataset, model, name, emoton_name):
+def train(dataset, model, name):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
 
@@ -36,7 +36,9 @@ def train(dataset, model, name, emoton_name):
     val_losses_chords, val_losses_melodies, val_losses_kl, val_accs_chords, val_accs_melodies = [], [], [], [], []
 
     # losses for one batch of data
-    def compute_loss(data):
+    def compute_loss(data, label):
+        
+        label = torch.tensor(label).to(device)
         if name == "lyrics2lofi":
             embeddings = data["embedding"].to(device)
             embedding_lengths = data["embedding_length"]
@@ -62,7 +64,7 @@ def train(dataset, model, name, emoton_name):
                       sampling_rate_melodies, chords_gt, notes_gt)
         else:
             pred_chords, pred_notes, pred_tempo, pred_key, pred_mode, pred_valence, pred_energy, kl = \
-                model(chords_gt, notes_gt, tempo_gt, key_gt, mode_gt, valence_gt, energy_gt, num_chords, max_num_chords,
+                model(label, chords_gt, notes_gt, tempo_gt, key_gt, mode_gt, valence_gt, energy_gt, num_chords, max_num_chords,
                       sampling_rate_chords, sampling_rate_melodies)
 
         # compute a boolean mask to select entries up to a specific index
@@ -103,9 +105,9 @@ def train(dataset, model, name, emoton_name):
         return loss_total, loss_chords, loss_kl, loss_melody, loss_tempo, loss_key, loss_mode, loss_valence, loss_energy, tp_chords, tp_melodies
 
     print(f"Starting training: {name}")
-    EPOCH = 500
+    EPOCH = 200
 
-    run = wandb.init(project="LoFi-VAE", name=emoton_name)
+    run = wandb.init(project="LoFi-CVAE")
     wandb.watch(model, log_freq=100)
 
     for epoch in range(EPOCH):
@@ -129,10 +131,10 @@ def train(dataset, model, name, emoton_name):
 
         # TRAINING
         model.train()
-        for batch, data in enumerate(train_dataloader):
+        for batch, (data, label) in enumerate(train_dataloader):
             loss, loss_chords, kl_loss, loss_melody, \
                 loss_tempo, loss_key, loss_mode, loss_valence, loss_energy, \
-                batch_tp_chords, batch_tp_melodies = compute_loss(data)
+                batch_tp_chords, batch_tp_melodies = compute_loss(data, label)
 
             ep_train_losses_chords.append(loss_chords)
             ep_train_losses_melodies.append(loss_melody)
@@ -151,11 +153,11 @@ def train(dataset, model, name, emoton_name):
 
         # VALIDATION
         model.eval()
-        for batch, data in enumerate(val_dataloader):
+        for batch, (data, label) in enumerate(val_dataloader):
             with torch.no_grad():
                 loss, loss_chords, kl_loss, loss_melody, \
                     loss_tempo, loss_key, loss_mode, loss_valence, loss_energy, \
-                    batch_tp_chords, batch_tp_melodies = compute_loss(data)
+                    batch_tp_chords, batch_tp_melodies = compute_loss(data, label)
 
                 ep_val_losses_chords.append(loss_chords)
                 ep_val_losses_melodies.append(loss_melody)
@@ -169,9 +171,9 @@ def train(dataset, model, name, emoton_name):
 
         # copy old model
         save_name = os.path.join(
-            "weights", emoton_name, f"{name}-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}.pth")
+            "weights", f"{name}-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}.pth")
         decoder_save_name = os.path.join(
-            "weights", emoton_name, f"{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth")
+            "weights", f"{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth")
         torch.save(model.state_dict(), save_name)
         torch.save(model.decoder.state_dict(), decoder_save_name)
         # epoch += 1
@@ -226,51 +228,3 @@ def train(dataset, model, name, emoton_name):
         val_losses_kl.append(ep_val_loss_kl.item())
         val_accs_chords.append(ep_val_chord_acc)
         val_accs_melodies.append(ep_val_melody_acc)
-
-        # fig, axs = plot.subplots(2, 2, figsize=(8, 4.5), dpi=200)
-        # # Chords loss
-        # axs[0, 0].set_title('Chords loss')
-        # axs[0, 0].plot(epochs, train_losses_chords,
-        #                label='Train', color='royalblue')
-        # axs[0, 0].plot(epochs, val_losses_chords, label='Val',
-        #                color='royalblue', linestyle='dotted')
-        # axs[0, 0].set_xlabel('Epochs')
-        # axs[0, 0].set_ylabel('Loss')
-        # axs[0, 0].legend()
-        # axs[0, 0].grid(True)
-        # # Chords accuracy
-        # axs[1, 0].set_title('Chords accuracy')
-        # axs[1, 0].plot(epochs, train_accs_chords,
-        #                label='Train', color='darkorange')
-        # axs[1, 0].plot(epochs, val_accs_chords, label='Val',
-        #                color='darkorange', linestyle='dotted')
-        # axs[1, 0].set_xlabel('Epochs')
-        # axs[1, 0].set_ylabel('Accuracy (%)')
-        # axs[1, 0].set_ylim(bottom=0)
-        # axs[1, 0].legend()
-        # axs[1, 0].grid(True)
-        # # Melody loss
-        # axs[0, 1].set_title('Melody loss')
-        # axs[0, 1].plot(epochs, train_losses_melodies,
-        #                label='Train', color='royalblue')
-        # axs[0, 1].plot(epochs, val_losses_melodies, label='Val',
-        #                color='royalblue', linestyle='dotted')
-        # axs[0, 1].set_xlabel('Epochs')
-        # axs[0, 1].set_ylabel('Loss')
-        # axs[0, 1].legend()
-        # axs[0, 1].grid(True)
-        # # Melody accuracy
-        # axs[1, 1].set_title('Melody accuracy')
-        # axs[1, 1].plot(epochs, train_accs_melodies,
-        #                label='Train', color='darkorange')
-        # axs[1, 1].plot(epochs, val_accs_melodies, label='Val',
-        #                color='darkorange', linestyle='dotted')
-        # axs[1, 1].set_xlabel('Epochs')
-        # axs[1, 1].set_ylabel('Accuracy (%)')
-        # axs[1, 1].set_ylim(bottom=0)
-        # axs[1, 1].legend()
-        # axs[1, 1].grid(True)
-
-        # plot.tight_layout()
-        # plot.savefig(f"{name}.png")
-        # plot.show()

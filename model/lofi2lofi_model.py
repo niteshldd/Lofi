@@ -5,38 +5,58 @@ import torch
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
-from .constants import *
+from constants import *
 
+def idx2onehot(label_batch, label_num):
+    assert torch.max(label_batch).item() < label_num, "Maximum of labels is out of range"
+
+    label_batch = label_batch.unsqueeze(1)
+
+    onehot_base = torch.zeros(label_batch.size(0), label_num).to(label_batch.device)
+    onehot = onehot_base.scatter_(1, label_batch, 1)
+
+    return onehot
 
 class Lofi2LofiModel(nn.Module):
     def __init__(self, device="cuda" if torch.cuda.is_available() else "cpu"):
         super(Lofi2LofiModel, self).__init__()
+        label_num = self.label_num = 4
+
         self.device = device
         self.encoder = Encoder(device)
         self.decoder = Decoder(device)
-        self.mean_linear = nn.Linear(in_features=HIDDEN_SIZE, out_features=HIDDEN_SIZE)
-        self.variance_linear = nn.Linear(in_features=HIDDEN_SIZE, out_features=HIDDEN_SIZE)
+        self.mean_linear = nn.Linear(in_features=HIDDEN_SIZE + label_num, out_features=HIDDEN_SIZE)
+        self.variance_linear = nn.Linear(in_features=HIDDEN_SIZE + label_num, out_features=HIDDEN_SIZE)
+        self.z_to_linear = nn.Linear(in_features=HIDDEN_SIZE + label_num, out_features=HIDDEN_SIZE)
 
-    def forward(self, gt_chords, gt_melodies, gt_tempo, gt_key, gt_mode, gt_valence, gt_energy, batch_num_chords,
+    def forward(self, label, gt_chords, gt_melodies, gt_tempo, gt_key, gt_mode, gt_valence, gt_energy, batch_num_chords,
                 num_chords, sampling_rate_chords=0, sampling_rate_melodies=0):
         # encode
         h = self.encoder(gt_chords, gt_melodies, gt_tempo, gt_key, gt_mode, gt_valence, gt_energy, batch_num_chords)
+        label = label = idx2onehot(label, self.label_num)
+        h_condition = torch.cat((h, label), dim=-1)
+
         # VAE
-        mu = self.mean_linear(h)
-        log_var = self.variance_linear(h)
+        mu = self.mean_linear(h_condition)
+        log_var = self.variance_linear(h_condition)
+
         z = self.sample(mu, log_var)
+        z_condition = torch.cat((z, label), dim=-1)
+        z_hidden = self.z_to_linear(z_condition)
+
         # compute the Kullback–Leibler divergence between a Gaussian and an uniform Gaussian
         kl = 0.5 * torch.mean(mu ** 2 + log_var.exp() - log_var - 1, dim=[0, 1])
 
         # decode
         if self.training:
             chord_outputs, melody_outputs, tempo, key, mode, valence, energy = \
-                self.decoder(z, num_chords, sampling_rate_chords, sampling_rate_melodies, gt_chords, gt_melodies)
+                self.decoder(z_hidden, num_chords, sampling_rate_chords, sampling_rate_melodies, gt_chords, gt_melodies)
         else:
             chord_outputs, melody_outputs, tempo, key, mode, valence, energy = \
-                self.decoder(z, num_chords)
+                self.decoder(z_hidden, num_chords)
 
         return chord_outputs, melody_outputs, tempo, key, mode, valence, energy, kl
+
 
     # reparameterization trick:
     # because backpropagation cannot flow through a random node, we introduce a new parameter that allows us to

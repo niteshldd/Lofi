@@ -31,7 +31,7 @@ def Check_Folder():
 #%%
 if __name__ == '__main__':
 
-    Check_Folder()
+    # Check_Folder()
     Set_Seed()
 
     dataset_path = 'dataset'
@@ -42,5 +42,5 @@ if __name__ == '__main__':
     dataset = Lofi2LofiDataset(dataset_folder)
     model = Lofi2LofiModel()
 
-    # train(dataset, model, "lofi2lofi")
+    train(dataset, model, "lofi2lofi")
 # %%

@@ -6,6 +6,8 @@ import os
 
 from dataset import *
 
+emotion_dict = {"Happy":0, "Angry":1, "Relaxed":2, "Sad":3}
+
 class Lofi2LofiDataset(Dataset):
     def __init__(self, dataset_folder):
         super(Lofi2LofiDataset, self).__init__()
@@ -20,7 +22,7 @@ class Lofi2LofiDataset(Dataset):
                     sample = process_sample(json_loaded)
                     
                     self.samples.append(sample)
-                    self.labels.append(emotion_foler_name)
+                    self.labels.append(emotion_dict[emotion_foler_name])
 
     def __len__(self):
         return len(self.samples)
