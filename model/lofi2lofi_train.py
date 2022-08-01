@@ -1,3 +1,4 @@
+#%%
 import os
 import argparse
 import torch
@@ -27,23 +28,19 @@ def Check_Folder():
                 print("Create the " + emo + " folder !")
                 os.mkdir(folder)
 
+#%%
 if __name__ == '__main__':
 
     Check_Folder()
     Set_Seed()
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--emotion", type=str, default="Happy", help="Input emotion for training: Happy, Angry, Relaxed, Sad")
-    args = parser.parse_args()
-
     dataset_path = 'dataset'
     dataset_name = 'processed_emotion'
-    emotion_name = args.emotion
 
-    dataset_folder = os.path.join(dataset_path, dataset_name, emotion_name)
-    dataset_files = os.listdir(dataset_folder)
+    dataset_folder = os.path.join(dataset_path, dataset_name)
 
-    dataset = Lofi2LofiDataset(dataset_folder, dataset_files)
+    dataset = Lofi2LofiDataset(dataset_folder)
     model = Lofi2LofiModel()
 
-    train(dataset, model, "lofi2lofi", emotion_name)
+    # train(dataset, model, "lofi2lofi")
+# %%
