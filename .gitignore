@@ -16,5 +16,9 @@ log.txt
 model/*.png
 model/midi_out
 
+#
+/json_out
+/midi_out
+
 # Checkpoints
 checkpoints
