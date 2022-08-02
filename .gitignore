@@ -15,6 +15,7 @@ embedding*.json
 log.txt
 model/*.png
 model/midi_out
+model/wandb
 
 #
 /json_out
