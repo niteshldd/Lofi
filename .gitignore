@@ -16,6 +16,7 @@ log.txt
 model/*.png
 model/midi_out
 model/wandb
+/condition_json_out
 
 #
 /json_out
