@@ -14,7 +14,7 @@ import torch.nn as nn
 
 device = "cpu"
 
-def inference(weight_path):
+def inference(weight_path, emotion_num):
     lofi2lofi_checkpoint = weight_path
 
     # print("Loading lofi model...")
@@ -27,22 +27,22 @@ def inference(weight_path):
     lofi2lofi_model.eval()
     # json_out = generate(lofi2lofi_model)
 
-    num = input("Please input a number : ")
-    num = torch.tensor([int(num)]) # [10] -> [1, 10]
+    # num = input("Please input a number (Happy : 0, Angry : 1, Relaxed : 2, Sad : 3) : ")
+    emotion_num = torch.tensor([int(emotion_num)])
 
-    mu = torch.randn(1, HIDDEN_SIZE)
-    label = idx2onehot(num, 4)
+    mu = torch.randn(1, HIDDEN_SIZE) # [1, 100]
 
+    label = idx2onehot(emotion_num, 4)
     z_condition = torch.cat((mu, label), dim=-1) # [1, 104] , 4 for emotion condition
-    print(z_condition)
+    # print(z_condition)
     json_out = decode(lofi2lofi_model, z_condition)
 
     return json_out
 
 #%%
 
-weight_base = os.path.join("model", "weights", "lofi2lofi-decoder-epoch10.pth")
-a = inference(weight_base)
+# weight_base = os.path.join("model", "weights", "latest_weight.pth")
+# a = inference(weight_base)
 
-print(a)
+# print(a)
 # %%
