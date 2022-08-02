@@ -10,34 +10,33 @@ import wandb
 
 from constants import *
 
-def train(dataset, model, name):
+def train(dataset, model, name, train_epoch):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
 
     train_size = int(TRAIN_VALIDATION_SPLIT * len(dataset))
     val_size = len(dataset) - train_size
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, [train_size, val_size])
-    train_dataloader = DataLoader(
-        train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_dataloader = DataLoader(
-        val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+    train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
+
+    train_dataloader = DataLoader(train_dataset,
+                                  batch_size=BATCH_SIZE,
+                                  shuffle=True)
+
+    val_dataloader = DataLoader(val_dataset,
+                                batch_size=BATCH_SIZE,
+                                shuffle=False)
 
     ce_loss = nn.CrossEntropyLoss(reduction='none')
     l1_loss = nn.L1Loss(reduction='mean')
 
     model = model.to(device)
 
-    optimizer = torch.optim.AdamW(
-        model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
-
-    epochs = []
-    train_losses_chords, train_losses_melodies, train_losses_kl, train_accs_chords, train_accs_melodies = [], [], [], [], []
-    val_losses_chords, val_losses_melodies, val_losses_kl, val_accs_chords, val_accs_melodies = [], [], [], [], []
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
     # losses for one batch of data
     def compute_loss(data, label):
-        
+
         label = torch.tensor(label).to(device)
         if name == "lyrics2lofi":
             embeddings = data["embedding"].to(device)
@@ -105,14 +104,13 @@ def train(dataset, model, name):
         return loss_total, loss_chords, loss_kl, loss_melody, loss_tempo, loss_key, loss_mode, loss_valence, loss_energy, tp_chords, tp_melodies
 
     print(f"Starting training: {name}")
-    EPOCH = 200
+    EPOCH = train_epoch
 
     run = wandb.init(project="LoFi-CVAE")
     wandb.watch(model, log_freq=100)
 
     for epoch in range(EPOCH):
         epoch += 1
-        # epochs.append(epoch)
 
         print(f"== Epoch {epoch} ==")
         ep_train_losses_chords, ep_train_losses_melodies, ep_train_losses_kl, ep_train_tp_chords, ep_train_tp_melodies = [], [], [], [], []
@@ -157,7 +155,8 @@ def train(dataset, model, name):
             with torch.no_grad():
                 loss, loss_chords, kl_loss, loss_melody, \
                     loss_tempo, loss_key, loss_mode, loss_valence, loss_energy, \
-                    batch_tp_chords, batch_tp_melodies = compute_loss(data, label)
+                    batch_tp_chords, batch_tp_melodies = compute_loss(
+                        data, label)
 
                 ep_val_losses_chords.append(loss_chords)
                 ep_val_losses_melodies.append(loss_melody)
@@ -176,7 +175,6 @@ def train(dataset, model, name):
             "weights", f"{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth")
         torch.save(model.state_dict(), save_name)
         torch.save(model.decoder.state_dict(), decoder_save_name)
-        # epoch += 1
 
         ep_train_loss_chord = sum(
             ep_train_losses_chords) / len(ep_train_losses_chords)
@@ -216,15 +214,3 @@ def train(dataset, model, name):
         print(
             f"VALIDATION: epoch chord loss: {ep_val_loss_chord:.3f}, melody loss: {ep_val_loss_melody:.3f}, KL: {ep_val_loss_kl:.3f}, "
             f"chord accuracy: {ep_val_chord_acc:.3f}, melody accuracy: {ep_val_melody_acc:.3f}")
-
-        train_losses_chords.append(ep_train_loss_chord.item())
-        train_losses_melodies.append(ep_train_loss_melody.item())
-        train_losses_kl.append(ep_train_loss_kl.item())
-        train_accs_chords.append(ep_train_chord_acc)
-        train_accs_melodies.append(ep_train_melody_acc)
-
-        val_losses_chords.append(ep_val_loss_chord.item())
-        val_losses_melodies.append(ep_val_loss_melody.item())
-        val_losses_kl.append(ep_val_loss_kl.item())
-        val_accs_chords.append(ep_val_chord_acc)
-        val_accs_melodies.append(ep_val_melody_acc)

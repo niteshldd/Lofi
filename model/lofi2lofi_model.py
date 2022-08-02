@@ -5,7 +5,10 @@ import torch
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
-from constants import *
+try:
+    from constants import *
+except :
+    from .constants import *
 
 def idx2onehot(label_batch, label_num):
     assert torch.max(label_batch).item() < label_num, "Maximum of labels is out of range"
@@ -27,13 +30,12 @@ class Lofi2LofiModel(nn.Module):
         self.decoder = Decoder(device)
         self.mean_linear = nn.Linear(in_features=HIDDEN_SIZE + label_num, out_features=HIDDEN_SIZE)
         self.variance_linear = nn.Linear(in_features=HIDDEN_SIZE + label_num, out_features=HIDDEN_SIZE)
-        self.z_to_linear = nn.Linear(in_features=HIDDEN_SIZE + label_num, out_features=HIDDEN_SIZE)
 
     def forward(self, label, gt_chords, gt_melodies, gt_tempo, gt_key, gt_mode, gt_valence, gt_energy, batch_num_chords,
                 num_chords, sampling_rate_chords=0, sampling_rate_melodies=0):
         # encode
         h = self.encoder(gt_chords, gt_melodies, gt_tempo, gt_key, gt_mode, gt_valence, gt_energy, batch_num_chords)
-        label = label = idx2onehot(label, self.label_num)
+        label = idx2onehot(label, self.label_num)
         h_condition = torch.cat((h, label), dim=-1)
 
         # VAE
@@ -42,7 +44,6 @@ class Lofi2LofiModel(nn.Module):
 
         z = self.sample(mu, log_var)
         z_condition = torch.cat((z, label), dim=-1)
-        z_hidden = self.z_to_linear(z_condition)
 
         # compute the Kullback–Leibler divergence between a Gaussian and an uniform Gaussian
         kl = 0.5 * torch.mean(mu ** 2 + log_var.exp() - log_var - 1, dim=[0, 1])
@@ -50,10 +51,10 @@ class Lofi2LofiModel(nn.Module):
         # decode
         if self.training:
             chord_outputs, melody_outputs, tempo, key, mode, valence, energy = \
-                self.decoder(z_hidden, num_chords, sampling_rate_chords, sampling_rate_melodies, gt_chords, gt_melodies)
+                self.decoder(z_condition, num_chords, sampling_rate_chords, sampling_rate_melodies, gt_chords, gt_melodies)
         else:
             chord_outputs, melody_outputs, tempo, key, mode, valence, energy = \
-                self.decoder(z_hidden, num_chords)
+                self.decoder(z_condition, num_chords)
 
         return chord_outputs, melody_outputs, tempo, key, mode, valence, energy, kl
 
@@ -115,6 +116,9 @@ class Decoder(nn.Module):
     def __init__(self, device):
         super(Decoder, self).__init__()
         self.device = device
+        label_num = 4 # 4 Emotion
+
+        self.z_to_linear = nn.Linear(in_features=HIDDEN_SIZE + label_num, out_features=HIDDEN_SIZE)
 
         self.chords_lstm = nn.LSTMCell(input_size=HIDDEN_SIZE * 1, hidden_size=HIDDEN_SIZE * 1)
         self.chord_embeddings = nn.Embedding(num_embeddings=CHORD_PREDICTION_LENGTH, embedding_dim=HIDDEN_SIZE)
@@ -173,6 +177,9 @@ class Decoder(nn.Module):
 
     def forward(self, z, num_chords=MAX_CHORD_LENGTH, sampling_rate_chords=0, sampling_rate_melodies=0, gt_chords=None,
                 gt_melody=None):
+        
+        z = self.z_to_linear(z) # [1, 104] -> [1, 100]
+
         tempo_output = self.tempo_linear(z)
         key_output = self.key_linear(z)
         mode_output = self.mode_linear(z)

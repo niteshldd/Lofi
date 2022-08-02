@@ -31,8 +31,12 @@ def Check_Folder():
 #%%
 if __name__ == '__main__':
 
-    # Check_Folder()
+    Check_Folder()
     Set_Seed()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epoch", type=int, default=100, help="Epoch of training")
+    args = parser.parse_args()
 
     dataset_path = 'dataset'
     dataset_name = 'processed_emotion'
@@ -42,5 +46,5 @@ if __name__ == '__main__':
     dataset = Lofi2LofiDataset(dataset_folder)
     model = Lofi2LofiModel()
 
-    train(dataset, model, "lofi2lofi")
+    train(dataset, model, "lofi2lofi", train_epoch=args.epoch)
 # %%
