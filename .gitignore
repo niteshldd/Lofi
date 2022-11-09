@@ -8,6 +8,7 @@ client/dist
 __pycache__
 model/dataset/hooktheory
 model/dataset/processed*
+model/dataset
 spotify_client_*
 *.npy
 *.pth

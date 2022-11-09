@@ -10,7 +10,9 @@ from model.lyrics2lofi_model import Lyrics2LofiModel
 from server.lofi2lofi_generate import decode
 from server.lyrics2lofi_predict import predict
 
-device = "cpu"
+# device = "cpu"
+device = 0
+map_loc = lambda storage, loc: storage.cuda(0) 
 app = Flask(__name__)
 limiter = Limiter(
     app,
@@ -18,18 +20,18 @@ limiter = Limiter(
     default_limits=["30 per minute"]
 )
 
-lofi2lofi_checkpoint = "checkpoints/lofi2lofi_decoder.pth"
+lofi2lofi_checkpoint = "/workspace/model/checkpoints/lofi2lofi_decoder.pth"
 print("Loading lofi model...", end=" ")
 lofi2lofi_model = Lofi2LofiDecoder(device=device)
-lofi2lofi_model.load_state_dict(torch.load(lofi2lofi_checkpoint, map_location=device))
+lofi2lofi_model.load_state_dict(torch.load(lofi2lofi_checkpoint, map_location=map_loc))
 print(f"Loaded {lofi2lofi_checkpoint}.")
 lofi2lofi_model.to(device)
 lofi2lofi_model.eval()
 
-lyrics2lofi_checkpoint = "checkpoints/lyrics2lofi.pth"
+lyrics2lofi_checkpoint = "/workspace/model/checkpoints/lyrics2lofi.pth"
 print("Loading lyrics2lofi model...", end=" ")
 lyrics2lofi_model = Lyrics2LofiModel(device=device)
-lyrics2lofi_model.load_state_dict(torch.load(lyrics2lofi_checkpoint, map_location=device))
+lyrics2lofi_model.load_state_dict(torch.load(lyrics2lofi_checkpoint, map_location=map_loc))
 print(f"Loaded {lyrics2lofi_checkpoint}.")
 lyrics2lofi_model.to(device)
 lyrics2lofi_model.eval()
@@ -59,3 +61,7 @@ def lyrics_to_track():
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
+
+
+if __name__ == '__main__':
+    app.run(port=10224)

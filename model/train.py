@@ -3,13 +3,23 @@ import torch
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.utils.data import DataLoader
+from torch.utils import tensorboard
 
 from model.constants import *
+import os
+from loguru import logger
 
 
-def train(dataset, model, name):
+def train(dataset, model, name, out_dir):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Using {device} device")
+    logger.info(f"Using {device} device")
+
+    ckpt_dir = os.path.join(out_dir, 'ckpt')
+    tf_dir = os.path.join(out_dir, 'tf_board')
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(ckpt_dir, exist_ok=True)
+    os.makedirs(tf_dir, exist_ok=True)
+    logger.info(f"ckpt and tf saving at {ckpt_dir} and {tf_dir}")
 
     train_size = int(TRAIN_VALIDATION_SPLIT * len(dataset))
     val_size = len(dataset) - train_size
@@ -27,6 +37,7 @@ def train(dataset, model, name):
     epochs = []
     train_losses_chords, train_losses_melodies, train_losses_kl, train_accs_chords, train_accs_melodies = [], [], [], [], []
     val_losses_chords, val_losses_melodies, val_losses_kl, val_accs_chords, val_accs_melodies = [], [], [], [], []
+    tf_writer = tensorboard.SummaryWriter(os.path.join(out_dir, 'tf_board'))
 
     # losses for one batch of data
     def compute_loss(data):
@@ -88,12 +99,12 @@ def train(dataset, model, name):
 
         return loss_total, loss_chords, loss_kl, loss_melody, loss_tempo, loss_key, loss_mode, loss_valence, loss_energy, tp_chords, tp_melodies
 
-    print(f"Starting training: {name}")
+    logger.info(f"Starting training: {name}")
     epoch = 0
     while True:
         epochs.append(epoch)
 
-        print(f"== Epoch {epoch} ==")
+        logger.info(f"== Epoch {epoch} ==")
         ep_train_losses_chords, ep_train_losses_melodies, ep_train_losses_kl, ep_train_tp_chords, ep_train_tp_melodies = [], [], [], [], []
         ep_val_losses_chords, ep_val_losses_melodies, ep_val_losses_kl, ep_val_tp_chords, ep_val_tp_melodies = [], [], [], [], []
 
@@ -104,7 +115,7 @@ def train(dataset, model, name):
             sampling_rate_chords = sampling_rate_at_epoch(epoch)
             sampling_rate_melodies = sampling_rate_at_epoch(epoch - MELODY_EPOCH_DELAY)
 
-        print(f"Scheduled sampling rate: C {sampling_rate_chords}, M {sampling_rate_melodies}")
+        logger.info(f"Scheduled sampling rate: C {sampling_rate_chords}, M {sampling_rate_melodies}")
 
         # TRAINING
         model.train()
@@ -124,7 +135,7 @@ def train(dataset, model, name):
 
             optimizer.step()
             loss = loss.item()
-            print(f"\tBatch {batch}:\tLoss {loss:.3f} (C: {loss_chords:.3f} + KL: {kl_loss:.3f} + "
+            logger.info(f"\tBatch {batch}:\tLoss {loss:.3f} (C: {loss_chords:.3f} + KL: {kl_loss:.3f} + "
                   f"M: {loss_melody:.3f} + T: {loss_tempo:.3f} + K: {loss_key:.3f} + Mo: {loss_mode:.3f} + "
                   f"V: {loss_valence:.3f} + E: {loss_energy:.3f})")
 
@@ -142,17 +153,17 @@ def train(dataset, model, name):
                 ep_val_tp_chords.extend(batch_tp_chords)
                 ep_val_tp_melodies.extend(batch_tp_melodies)
 
-                print(f"\tValidation Batch {batch}:\tLoss {loss:.3f} (C: {loss_chords:.3f} + KL: {kl_loss:.3f} + "
+                logger.info(f"\tValidation Batch {batch}:\tLoss {loss:.3f} (C: {loss_chords:.3f} + KL: {kl_loss:.3f} + "
                       f"M: {loss_melody:.3f} + T: {loss_tempo:.3f} + K: {loss_key:.3f} + Mo: {loss_mode:.3f} + "
                       f"V: {loss_valence:.3f} + E: {loss_energy:.3f})")
 
         # copy old model
-        save_name = f"{name}-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}.pth"
-        decoder_save_name = f"{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth"
+        save_name = os.path.join(ckpt_dir, f"{name}-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}.pth")
+        decoder_save_name = os.path.join(ckpt_dir, f"{name}-decoder-epoch{epoch}.pth" if epoch % 10 == 0 else f"{name}-decoder.pth")
         torch.save(model.state_dict(), save_name)
         torch.save(model.decoder.state_dict(), decoder_save_name)
         epoch += 1
-
+        logger.info(f"saving to {save_name} and {decoder_save_name}")
         ep_train_loss_chord = sum(ep_train_losses_chords) / len(ep_train_losses_chords)
         ep_train_loss_melody = sum(ep_train_losses_melodies) / len(ep_train_losses_melodies)
         ep_train_loss_kl = sum(ep_train_losses_kl) / len(ep_train_losses_kl)
@@ -165,12 +176,11 @@ def train(dataset, model, name):
         ep_val_chord_acc = (sum(ep_val_tp_chords) / len(ep_val_tp_chords)) * 100
         ep_val_melody_acc = (sum(ep_val_tp_melodies) / len(ep_val_tp_melodies)) * 100
 
-        print(
-            f"Epoch chord loss: {ep_train_loss_chord:.3f}, melody loss: {ep_train_loss_melody:.3f}, KL: {ep_train_loss_kl:.3f}, "
-            f"chord accuracy: {ep_train_chord_acc:.3f}, melody accuracy: {ep_train_melody_acc:.3f}")
-        print(
-            f"VALIDATION: epoch chord loss: {ep_val_loss_chord:.3f}, melody loss: {ep_val_loss_melody:.3f}, KL: {ep_val_loss_kl:.3f}, "
-            f"chord accuracy: {ep_val_chord_acc:.3f}, melody accuracy: {ep_val_melody_acc:.3f}")
+        logger.info(f"Epoch chord loss: {ep_train_loss_chord:.3f}, melody loss: {ep_train_loss_melody:.3f}, KL: {ep_train_loss_kl:.3f}")
+        logger.info(f"chord accuracy: {ep_train_chord_acc:.3f}, melody accuracy: {ep_train_melody_acc:.3f}")
+        logger.info(f"VALIDATION: epoch chord loss: {ep_val_loss_chord:.3f}, melody loss: {ep_val_loss_melody:.3f}, KL: {ep_val_loss_kl:.3f}")
+        logger.info(f"chord accuracy: {ep_val_chord_acc:.3f}, melody accuracy: {ep_val_melody_acc:.3f}")
+
 
         train_losses_chords.append(ep_train_loss_chord)
         train_losses_melodies.append(ep_train_loss_melody)
@@ -183,43 +193,53 @@ def train(dataset, model, name):
         val_losses_kl.append(ep_val_loss_kl)
         val_accs_chords.append(ep_val_chord_acc)
         val_accs_melodies.append(ep_val_melody_acc)
+        
+        tf_writer.add_scalar('train_loss_chord', ep_train_loss_chord, epoch)
+        tf_writer.add_scalar('train_loss_melody', ep_train_loss_melody, epoch)
+        tf_writer.add_scalar('train_loss_KL', ep_train_loss_kl, epoch)
+        tf_writer.add_scalar('train_chord_acc', ep_train_chord_acc, epoch)
+        tf_writer.add_scalar('train_melody_acc', ep_train_melody_acc, epoch)
 
-        fig, axs = plot.subplots(2, 2, figsize=(8, 4.5), dpi=200)
-        # Chords loss
-        axs[0, 0].set_title('Chords loss')
-        axs[0, 0].plot(epochs, train_losses_chords, label='Train', color='royalblue')
-        axs[0, 0].plot(epochs, val_losses_chords, label='Val', color='royalblue', linestyle='dotted')
-        axs[0, 0].set_xlabel('Epochs')
-        axs[0, 0].set_ylabel('Loss')
-        axs[0, 0].legend()
-        axs[0, 0].grid(True)
-        # Chords accuracy
-        axs[1, 0].set_title('Chords accuracy')
-        axs[1, 0].plot(epochs, train_accs_chords, label='Train', color='darkorange')
-        axs[1, 0].plot(epochs, val_accs_chords, label='Val', color='darkorange', linestyle='dotted')
-        axs[1, 0].set_xlabel('Epochs')
-        axs[1, 0].set_ylabel('Accuracy (%)')
-        axs[1, 0].set_ylim(bottom=0)
-        axs[1, 0].legend()
-        axs[1, 0].grid(True)
-        # Melody loss
-        axs[0, 1].set_title('Melody loss')
-        axs[0, 1].plot(epochs, train_losses_melodies, label='Train', color='royalblue')
-        axs[0, 1].plot(epochs, val_losses_melodies, label='Val', color='royalblue', linestyle='dotted')
-        axs[0, 1].set_xlabel('Epochs')
-        axs[0, 1].set_ylabel('Loss')
-        axs[0, 1].legend()
-        axs[0, 1].grid(True)
-        # Melody accuracy
-        axs[1, 1].set_title('Melody accuracy')
-        axs[1, 1].plot(epochs, train_accs_melodies, label='Train', color='darkorange')
-        axs[1, 1].plot(epochs, val_accs_melodies, label='Val', color='darkorange', linestyle='dotted')
-        axs[1, 1].set_xlabel('Epochs')
-        axs[1, 1].set_ylabel('Accuracy (%)')
-        axs[1, 1].set_ylim(bottom=0)
-        axs[1, 1].legend()
-        axs[1, 1].grid(True)
+        tf_writer.add_scalar('val_chord_acc', ep_val_chord_acc, epoch)
+        tf_writer.add_scalar('val_melody_acc', ep_val_melody_acc, epoch)
+        tf_writer.flush()
 
-        plot.tight_layout()
-        plot.savefig(f"{name}.png")
-        plot.show()
+        # fig, axs = plot.subplots(2, 2, figsize=(8, 4.5), dpi=200)
+        # # Chords loss
+        # axs[0, 0].set_title('Chords loss')
+        # axs[0, 0].plot(epochs, train_losses_chords, label='Train', color='royalblue')
+        # axs[0, 0].plot(epochs, val_losses_chords, label='Val', color='royalblue', linestyle='dotted')
+        # axs[0, 0].set_xlabel('Epochs')
+        # axs[0, 0].set_ylabel('Loss')
+        # axs[0, 0].legend()
+        # axs[0, 0].grid(True)
+        # # Chords accuracy
+        # axs[1, 0].set_title('Chords accuracy')
+        # axs[1, 0].plot(epochs, train_accs_chords, label='Train', color='darkorange')
+        # axs[1, 0].plot(epochs, val_accs_chords, label='Val', color='darkorange', linestyle='dotted')
+        # axs[1, 0].set_xlabel('Epochs')
+        # axs[1, 0].set_ylabel('Accuracy (%)')
+        # axs[1, 0].set_ylim(bottom=0)
+        # axs[1, 0].legend()
+        # axs[1, 0].grid(True)
+        # # Melody loss
+        # axs[0, 1].set_title('Melody loss')
+        # axs[0, 1].plot(epochs, train_losses_melodies, label='Train', color='royalblue')
+        # axs[0, 1].plot(epochs, val_losses_melodies, label='Val', color='royalblue', linestyle='dotted')
+        # axs[0, 1].set_xlabel('Epochs')
+        # axs[0, 1].set_ylabel('Loss')
+        # axs[0, 1].legend()
+        # axs[0, 1].grid(True)
+        # # Melody accuracy
+        # axs[1, 1].set_title('Melody accuracy')
+        # axs[1, 1].plot(epochs, train_accs_melodies, label='Train', color='darkorange')
+        # axs[1, 1].plot(epochs, val_accs_melodies, label='Val', color='darkorange', linestyle='dotted')
+        # axs[1, 1].set_xlabel('Epochs')
+        # axs[1, 1].set_ylabel('Accuracy (%)')
+        # axs[1, 1].set_ylim(bottom=0)
+        # axs[1, 1].legend()
+        # axs[1, 1].grid(True)
+
+        # plot.tight_layout()
+        # plot.savefig(f"{name}.png")
+        # plot.show()

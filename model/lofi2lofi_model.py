@@ -147,8 +147,9 @@ class Decoder(nn.Module):
         for i in range(0, 100, 5):
             hash += str((mu[0][i:i + 1].abs().sum() * 587).int().item())[-1]
         # last 4 characters are the beginning of the MD5 hash of the whole vector
-        hash2 = int(md5(mu.numpy()).hexdigest(), 16)
+        hash2 = int(md5(mu.cpu().numpy()).hexdigest(), 16)
         hash = f"#{hash}{hash2}"[:25]
+        mu = mu.to(self.device)
         return hash, self(mu, MAX_CHORD_LENGTH)
 
     def forward(self, z, num_chords=MAX_CHORD_LENGTH, sampling_rate_chords=0, sampling_rate_melodies=0, gt_chords=None,

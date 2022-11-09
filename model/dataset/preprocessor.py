@@ -13,7 +13,7 @@ add_lyrics = False
 lyrics_provider = "google"  # google or musixmatch
 add_spotify = True
 
-hooktheory_folder = "hooktheory"
+hooktheory_folder = "datasets/hooktheory/event/"
 output_folder = "processed"
 log_file = "log.txt"
 alphabet_paths = [f.path for f in os.scandir(hooktheory_folder) if f.is_dir()]

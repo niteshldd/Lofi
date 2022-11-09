@@ -5,10 +5,11 @@ from model.lofi2lofi_model import Lofi2LofiModel
 from model.train import train
 
 if __name__ == '__main__':
-    dataset_folder = "dataset/processed-spotify-all"
+    # dataset_folder = "dataset/processed-spotify-all"
+    dataset_folder = "/workspace/model/dataset/processed"
     dataset_files = os.listdir(dataset_folder)
 
     dataset = Lofi2LofiDataset(dataset_folder, dataset_files)
     model = Lofi2LofiModel()
 
-    train(dataset, model, "lofi2lofi")
+    train(dataset, model, "lofi2lofi", '/workspace/model/lofi2lofi')
