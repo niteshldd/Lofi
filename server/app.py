@@ -9,10 +9,11 @@ from model.lofi2lofi_model import Decoder as Lofi2LofiDecoder
 from model.lyrics2lofi_model import Lyrics2LofiModel
 from server.lofi2lofi_generate import decode
 from server.lyrics2lofi_predict import predict
+# from functools import partial
+import toml
 
-# device = "cpu"
-device = 0
-map_loc = lambda storage, loc: storage.cuda(0) 
+device = "cpu"
+map_loc = lambda storage, dev: storage.cuda(dev) 
 app = Flask(__name__)
 limiter = Limiter(
     app,
@@ -20,10 +21,22 @@ limiter = Limiter(
     default_limits=["30 per minute"]
 )
 
+
 lofi2lofi_checkpoint = "/workspace/model/checkpoints/lofi2lofi_decoder.pth"
 print("Loading lofi model...", end=" ")
 lofi2lofi_model = Lofi2LofiDecoder(device=device)
 lofi2lofi_model.load_state_dict(torch.load(lofi2lofi_checkpoint, map_location=map_loc))
+
+name2mod = {"default": {
+    "mod": lofi2lofi_model, 
+    "pth": "/workspace/model/checkpoints/lofi2lofi_decoder.pth"
+    },
+    "v001": None,
+    "pth": "/workspace/model/lofi2lofi/ckpt/lofi2lofi-decoder-epoch200.pth",
+    "device": "cpu"
+    }
+
+
 print(f"Loaded {lofi2lofi_checkpoint}.")
 lofi2lofi_model.to(device)
 lofi2lofi_model.eval()
@@ -46,7 +59,11 @@ def home():
 def decode_input():
     input = request.args.get('input')
     number_list = json.loads(input)
+
     json_output = decode(lofi2lofi_model, torch.tensor([number_list]).float())
+
+    json.dump(json_output, open('/workspace/output.json', 'w'))
+
     response = jsonify(json_output)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
