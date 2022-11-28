@@ -13,7 +13,9 @@ from server.lyrics2lofi_predict import predict
 # from functools import partial
 import toml
 
-device = "cpu"
+
+#device = "cpu"
+device = 0 
 map_loc = lambda storage, dev: storage.cuda(dev) 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -30,24 +32,54 @@ name2mod = {"default": {
     }
 '''
 
-lofi2lofi_model = Lofi2LofiDecoder(device=device)
-lofi2lofi_model.load_state_dict(torch.load("/workspace/model/checkpoints/lofi2lofi_decoder.pth", map_location=map_loc))
-lofi2lofi_model.to(device)
-lofi2lofi_model.eval()
+# lofi2lofi_model = Lofi2LofiDecoder(device=device)
+# lofi2lofi_model.load_state_dict(torch.load("/workspace/model/checkpoints/lofi2lofi_decoder.pth", map_location=map_loc))
+# lofi2lofi_model.to(device)
+# lofi2lofi_model.eval()
 
 
 
-lofi2lofi_model_001 = Lofi2LofiDecoder(device=device)
-lofi2lofi_model_001.load_state_dict(torch.load("/workspace/model/lofi2lofi/ckpt/lofi2lofi-decoder-epoch200.pth", map_location=map_loc))
-lofi2lofi_model_001.to(device)
-lofi2lofi_model_001.eval()
+# lofi2lofi_model_001 = Lofi2LofiDecoder(device=device)
+# lofi2lofi_model_001.load_state_dict(torch.load("/workspace/model/lofi2lofi/ckpt/lofi2lofi-decoder-epoch200.pth", map_location=map_loc))
+# lofi2lofi_model_001.to(device)
+# lofi2lofi_model_001.eval()
 
 
+# name2path = {
+#     'default': "/workspace/model/checkpoints/lofi2lofi_decoder.pth",
+#     '001': "/workspace/model/lofi2lofi/ckpt/lofi2lofi-decoder-epoch200.pth",
+#     'rnb_500': "/workspace/model/checkpoints/r-and-b/ckpt/r-and-b-decoder-epoch500.pth",
+#     'rnb_1500': "/workspace/model/checkpoints/r-and-b/ckpt/r-and-b-decoder-epoch1500.pth",
+#     'rnb_ft_1370': "/workspace/model/checkpoints/r-and-b_pretrain/ckpt/r-and-b_pretrain-decoder-epoch1370.pth",
+#     'rock_200': "/workspace/model/checkpoints/rock/ckpt/rock-decoder-epoch200.pth",
+#     'rock_500': "/workspace/model/checkpoints/rock/ckpt/rock-decoder-epoch500.pth",
+#     'rock_ft_1360': "/workspace/model/checkpoints/rock_pretrain/ckpt/rock_pretrain-decoder-epoch1360.pth"
+# }
 
-name2mod = {
-    'default': lofi2lofi_model,
-    '001': lofi2lofi_model_001
+name2path = {
+    'default': "/workspace/model/checkpoints/lofi2lofi_decoder.pth",
+    '001': "/workspace/model/checkpoints/lofi2lofi-decoder-epoch200.pth",
+    'rnb_500': "/workspace/model/checkpoints/r-and-b-decoder-epoch500.pth",
+    'rnb_1500': "/workspace/model/checkpoints/r-and-b-decoder-epoch1500.pth",
+    'rnb_ft_1370': "/workspace/model/checkpoints/r-and-b_pretrain-decoder-epoch1370.pth",
+    'rock_200': "/workspace/model/checkpoints/rock-decoder-epoch200.pth",
+    'rock_500': "/workspace/model/checkpoints/rock-decoder-epoch500.pth",
+    'rock_ft_1360': "/workspace/model/checkpoints/rock_pretrain-decoder-epoch1360.pth"
 }
+
+
+# name2mod = {
+#     'default': lofi2lofi_model,
+#     '001': lofi2lofi_model_001
+# }
+
+name2mod = { k: Lofi2LofiDecoder(device=device) for k in name2path}
+for k, v in name2mod.items():
+    print(f'Loading params for {k} from {name2path[k]}')
+    v.load_state_dict(torch.load(name2path[k], map_location=map_loc))
+    v.to(device)
+    v.eval()
+
 
 
 # lyrics2lofi_checkpoint = "/workspace/model/checkpoints/lyrics2lofi.pth"
@@ -69,7 +101,9 @@ def decode_input():
     input = request.args.get('input')
     number_list = json.loads(input)
 
-    mod_name = request.args.get('mod_name', 'default')
+    mod_name = request.args.get('mod_name2', 'default')
+    print(name2mod.keys())
+    print(mod_name)
     mod = name2mod[mod_name]
 
     json_output = decode(mod, torch.tensor([number_list]).float(), title=mod_name)
@@ -96,4 +130,4 @@ def get_mod_names():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10337)
+    app.run(host='0.0.0.0', port=17337)
