@@ -179,6 +179,47 @@ $panel-border-radius: 6px;
   }
 }
 
+
+#meta-panel {
+  width: 190px;
+  .header {
+    display: relative;
+  }
+
+  #meta-text {
+    display: flex;
+    flex-direction: column;
+    height: $height - 16px;
+    padding: 4px 8px 8px 8px;
+    justify-content: space-between;
+    color: black;
+    #meta-params {
+      color: black;
+      label{
+        width: 50px;
+        display: inline-block;
+      }
+      input{
+        width: 100px;
+        color: black;
+        margin-top: 8px;
+        margin-bottom: 8px;
+
+      }
+      textarea{
+        width: 160px;
+        height: 101px;
+        margin-top: 8px;
+        columns: 1;
+      }
+    }
+  }
+
+  #meta-button {
+    width: 100%;
+  }
+}
+
 #player-panel {
   display: flex;
   flex-direction: row;

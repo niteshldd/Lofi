@@ -112,6 +112,102 @@ generateButton.addEventListener('click', async () => {
     generateButton.textContent = 'Error!';
     return;
   }
+  const title = document.getElementById('hash') as HTMLInputElement;
+  title.value = params.title
+
+  const key = document.getElementById('key') as HTMLInputElement;
+  key.value = params.key.toString()
+
+  const mode = document.getElementById('mode') as HTMLInputElement;
+  mode.value = params.mode.toString()
+
+  const bpm = document.getElementById('bpm') as HTMLInputElement;
+  bpm.value = params.bpm.toString()
+
+  const energy = document.getElementById('energy') as HTMLInputElement;
+  energy.value = params.energy.toString()
+
+  const valence = document.getElementById('valence') as HTMLInputElement;
+  valence.value = params.valence.toString()
+
+  const chords = document.getElementById('chords') as HTMLInputElement;
+  chords.value = params.chords.toString()
+
+  const melodies = document.getElementById('melodies') as HTMLInputElement;
+  melodies.value = params.melodies.toString()
+
+
+  // const producer = new Producer();
+  // const track = producer.produce(params);
+  // player.addToPlaylist(track, true);
+  // // scroll to end of playlist
+  // playlistContainer.scrollTop = playlistContainer.scrollHeight;
+
+  // generateButton.disabled = false;
+  loadingAnimation.style.display = 'none';
+});
+
+
+// save meta button
+const metaButton = document.getElementById('meta-button') as HTMLButtonElement;
+metaButton.addEventListener('click', async () => {
+  generateButton.disabled = true;
+  loadingAnimation.style.display = null;
+
+  var str2num = (str_arr: Array<string>) => {
+    let num_arr: Array<number>
+    for (let i=0;i<str_arr.length; i++){
+      num_arr.push(+str_arr[i])
+    }
+    return num_arr
+  }
+
+  let params = new OutputParams()
+  try {
+    const title = document.getElementById('hash') as HTMLInputElement;
+    params.title = title.value
+    
+    const key = document.getElementById('key') as HTMLInputElement;
+    params.key = +key.value
+
+    const mode = document.getElementById('mode') as HTMLInputElement;
+    params.mode = +mode.value
+
+    const bpm = document.getElementById('bpm') as HTMLInputElement;
+    params.bpm = +bpm.value
+
+    const energy = document.getElementById('energy') as HTMLInputElement;
+    params.energy = +energy.value
+
+    const valence = document.getElementById('valence') as HTMLInputElement;
+    params.valence = +valence.value
+
+    const chords = document.getElementById('chords') as HTMLInputElement;
+    let chords_arr = chords.value.split(',')
+    params.chords = new Array<number>();
+    for (let i=0; i < 8; i++){
+      params.chords.push(+chords_arr[i])
+    }
+
+    const melodies = document.getElementById('melodies') as HTMLInputElement;
+    var melody_arr = melodies.value.split(',')
+    params.melodies = [[0]]
+    params.melodies.pop()
+    for (let i=0; i < 8; i++){
+      melody_arr.slice(i*8, i*8+8)
+      let melody_nums: number[] = melody_arr.map((s) => {
+        let n: number
+        n=+s
+        return n
+      })
+      params.melodies.push(melody_nums)
+    }
+  } catch (err) {
+    console.log(err)
+    generateButton.textContent = 'Error!';
+    return;
+  }
+
   const producer = new Producer();
   const track = producer.produce(params);
   player.addToPlaylist(track, true);
@@ -121,6 +217,7 @@ generateButton.addEventListener('click', async () => {
   generateButton.disabled = false;
   loadingAnimation.style.display = 'none';
 });
+
 
 /** Formats seconds into an MM:SS string */
 const formatTime = (seconds: number) => {
