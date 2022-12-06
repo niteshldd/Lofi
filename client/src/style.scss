@@ -26,7 +26,7 @@ body {
   height: 100%;
 }
 
-@mixin background($url) {  
+@mixin background($url) {
   background: url($url), black;
   background-repeat: no-repeat;
   background-position: center center;
@@ -50,6 +50,7 @@ body::before {
 }
 
 $panel-border-radius: 6px;
+
 .panel {
   background: $ui-background;
   border-radius: $panel-border-radius;
@@ -143,6 +144,7 @@ $panel-border-radius: 6px;
   }
 
   $slider-height: 3.7px;
+
   input[type='range'] {
     border-radius: 0;
     margin: 0;
@@ -162,13 +164,16 @@ $panel-border-radius: 6px;
     &::-webkit-slider-runnable-track {
       @include slider-track;
     }
+
     &::-moz-range-track {
       @include slider-track;
     }
+
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
       @include slider-thumb;
     }
+
     &::-moz-range-thumb {
       @include slider-thumb;
     }
@@ -182,6 +187,7 @@ $panel-border-radius: 6px;
 
 #meta-panel {
   width: 190px;
+
   .header {
     display: relative;
   }
@@ -193,20 +199,24 @@ $panel-border-radius: 6px;
     padding: 4px 8px 8px 8px;
     justify-content: space-between;
     color: black;
+
     #meta-params {
       color: black;
-      label{
+
+      label {
         width: 50px;
         display: inline-block;
       }
-      input{
+
+      input {
         width: 100px;
         color: black;
         margin-top: 8px;
         margin-bottom: 8px;
 
       }
-      textarea{
+
+      textarea {
         width: 160px;
         height: 101px;
         margin-top: 8px;
@@ -235,10 +245,11 @@ $panel-border-radius: 6px;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
     border-right: 1px solid $ui-background;
+
     @media not screen and (max-width: 900px) {
       backdrop-filter: none;
     }
-    
+
     #cover {
       padding: 12px 24px;
       user-select: none;
@@ -392,7 +403,8 @@ $panel-border-radius: 6px;
       }
     }
 
-    #repeat-button, #shuffle-button {
+    #repeat-button,
+    #shuffle-button {
       min-height: 32px;
       min-width: 32px;
       background-size: 16px;
@@ -449,6 +461,7 @@ $panel-border-radius: 6px;
     flex-direction: column;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+
     @media not screen and (max-width: 900px) {
       backdrop-filter: none;
     }
@@ -525,6 +538,7 @@ $panel-border-radius: 6px;
             0% {
               transform: rotate(0deg);
             }
+
             100% {
               transform: rotate(360deg);
             }
@@ -536,6 +550,7 @@ $panel-border-radius: 6px;
         background: rgba(0, 0, 0, 0.15);
 
         &:not(.loading) {
+
           // playing icon
           .track-icons:before {
             content: '';
@@ -549,7 +564,7 @@ $panel-border-radius: 6px;
         }
       }
 
-      .track-actions {        
+      .track-actions {
         transition: visibility 0.2s, opacity 0.2s;
         display: flex;
         gap: 8px;
@@ -625,6 +640,7 @@ button.flat {
       color: black;
     }
   }
+
   &:active {
     background-color: white;
     color: black;
@@ -645,6 +661,7 @@ button.plain {
       background-color: $ui-hover-background;
     }
   }
+
   &:active {
     background-color: $ui-hover-background;
   }
@@ -665,6 +682,7 @@ button.circle {
       background-color: $ui-hover-background;
     }
   }
+
   &:active {
     background-color: $ui-hover-background;
   }
@@ -712,13 +730,16 @@ input[type='range'] {
   &::-webkit-slider-runnable-track {
     @include slider-track;
   }
+
   &::-moz-range-track {
     @include slider-track;
   }
+
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     @include slider-thumb;
   }
+
   &::-moz-range-thumb {
     @include slider-thumb;
     border: 0;
@@ -748,13 +769,16 @@ input[type='range'] {
   &::-webkit-slider-runnable-track {
     @include slider-track;
   }
+
   &::-moz-range-track {
     @include slider-track;
   }
+
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     @include slider-thumb;
   }
+
   &::-moz-range-thumb {
     @include slider-thumb;
   }
@@ -778,10 +802,12 @@ input[type='range'] {
       left: 2px;
       animation-delay: -0.24s;
     }
+
     &:nth-child(2) {
       left: 8px;
       animation-delay: -0.12s;
     }
+
     &:nth-child(3) {
       left: 14px;
       animation-delay: 0;
@@ -794,6 +820,7 @@ input[type='range'] {
     top: 0px;
     height: 16px;
   }
+
   50%,
   100% {
     top: 4px;
@@ -805,9 +832,11 @@ input[type='range'] {
 * {
   scrollbar-width: thin;
 }
+
 *::-webkit-scrollbar {
   width: 10px;
 }
+
 *::-webkit-scrollbar-thumb {
   background-color: $ui-hover-background;
   margin: 2px;
@@ -825,6 +854,7 @@ input[type='range'] {
 // responsive
 $responsive-min-width: 300px;
 $responsive-max-width: 360px;
+
 @media screen and (max-width: 900px) {
   body {
     gap: 48px;
@@ -863,9 +893,9 @@ $responsive-max-width: 360px;
       border: none !important;
       border-bottom: 1px solid $ui-background;
       margin-bottom: 24px;
-      
-      border-top-right-radius: $panel-border-radius !important;
-      border-bottom-right-radius: $panel-border-radius !important;
+
+      border-top-right-radius: $panel-border-radius  !important;
+      border-bottom-right-radius: $panel-border-radius  !important;
     }
 
     #export-panel {
@@ -874,10 +904,10 @@ $responsive-max-width: 360px;
       top: 50%;
       transform: translate(-50%, -50%);
     }
-  
-    #playlist {  
-      border-top-left-radius: $panel-border-radius !important;
-      border-bottom-left-radius: $panel-border-radius !important;
+
+    #playlist {
+      border-top-left-radius: $panel-border-radius  !important;
+      border-bottom-left-radius: $panel-border-radius  !important;
     }
   }
 

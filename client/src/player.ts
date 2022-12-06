@@ -133,6 +133,11 @@ class Player {
     if (!this.currentTrack) {
       return;
     }
+    // Tone.Offline(({transport}) => {
+
+    // }, 4).then((buffer) => {
+    //   console.log(buffer);
+    // });
     this.isLoading = true;
 
     this.gain = new Tone.Gain();
@@ -148,6 +153,8 @@ class Player {
     }
 
     await Tone.start();
+    const recorder = new Tone.Recorder();
+    recorder.start();
     Tone.Transport.bpm.value = this.currentTrack.bpm;
 
     this.samplePlayers = new Map();
@@ -165,7 +172,7 @@ class Player {
       })
         .chain(...sampleGroup.getFilters(), this.gain, Tone.Destination)
         .sync();
-
+      player.connect(recorder);
       if (!this.samplePlayers.has(sampleGroupName)) {
         this.samplePlayers.set(sampleGroupName, Array(sampleGroup.size));
       }
@@ -178,6 +185,7 @@ class Player {
       const toneInstrument = getInstrument(instrument)
         .chain(...getInstrumentFilters(instrument), this.gain, Tone.Destination)
         .sync();
+      toneInstrument.connect(recorder);
       this.instruments.set(instrument, toneInstrument);
       instrumentVolumes.set(toneInstrument, toneInstrument.volume.value);
     }
@@ -187,11 +195,11 @@ class Player {
 
     // wait until all samples are loaded
     await Tone.loaded();
-
     for (const sampleLoop of this.currentTrack.sampleLoops) {
       const samplePlayer = this.samplePlayers.get(sampleLoop.sampleGroupName)[
         sampleLoop.sampleIndex
       ];
+      samplePlayer.connect(recorder);
       samplePlayer.start(sampleLoop.startTime);
       samplePlayer.stop(sampleLoop.stopTime);
     }
@@ -199,6 +207,7 @@ class Player {
     for (const noteTiming of this.currentTrack.instrumentNotes) {
       const instrumentSampler = this.instruments.get(noteTiming.instrument);
       if (noteTiming.duration) {
+        instrumentSampler.connect(recorder);
         instrumentSampler.triggerAttackRelease(
           noteTiming.pitch,
           noteTiming.duration,
@@ -213,13 +222,11 @@ class Player {
         );
       }
     }
-
     // connect analyzer for visualizations
     const analyzer = new Tone.Analyser('fft', 32);
     this.gain.connect(analyzer);
-
+    
     const fadeOutBegin = this.currentTrack.length - this.currentTrack.fadeOutDuration;
-
     // schedule events to do every 100ms
     Tone.Transport.scheduleRepeat((time) => {
       this.isLoading = false;
@@ -239,8 +246,18 @@ class Player {
         sampler.volume.value = volume - volumeOffset;
       }
     }, 0.1);
-
+  
     this.play();
+    setTimeout(async () => {
+      // the recorded audio is returned as a blob
+      const recording = await recorder.stop();
+      const title = this.currentTrack.title;
+      const url = URL.createObjectURL(recording);
+      const anchor = document.createElement("a");
+      anchor.download =  title + ".webm";
+      anchor.href = url;
+      anchor.click();
+    }, this.currentTrack.length * 1000);
   }
 
   /** Starts playback on the current track; the track must have been loaded */

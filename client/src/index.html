@@ -10,10 +10,11 @@
 </head>
 
 <body>
-  <div id="header">LOFI PLAYGROUND</div>  
+  <div id="header">LOFI PLAYGROUND</div>
   <div id="center">
     <div id="intro-text" class="panel">
-      <span>Our machine learning model has learned to represent a lofi track as a vector of 100 features. Each slider in the Latent Space panel corresponds to one such feature. Slide them around and generate new tracks!</span>
+      <span>Our machine learning model has learned to represent a lofi track as a vector of 100 features. Each slider in
+        the Latent Space panel corresponds to one such feature. Slide them around and generate new tracks!</span>
     </div>
     <div id="main">
       <div id="player-panel">
@@ -50,7 +51,7 @@
                 <span id="current-time">0:00</span>
                 <span id="slash">/</span>
                 <span id="total-time">0:00</span>
-              </div>            
+              </div>
             </div>
           </div>
           <div id="buttons">
@@ -95,7 +96,7 @@
             <div id="playlist-header-text" class="header-text">PLAYLIST</div>
             <button id="export-button" class="plain" title="Share this playlist"></button>
           </div>
-          <div id="playlist-tracks"></div>          
+          <div id="playlist-tracks"></div>
         </div>
       </div>
       <div id="slider-panel" class="panel">
@@ -107,7 +108,13 @@
           <div id="sliders">
             <button id="refresh-button" class="plain" title="Sample new values from a normal distribution"></button>
           </div>
-          <button id="generate-button" class="flat"><div id="loading-animation" style="display: none"><div></div><div></div><div></div></div>Generate</button>
+          <button id="generate-button" class="flat">
+            <div id="loading-animation" style="display: none">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>Generate
+          </button>
         </div>
       </div>
 
@@ -118,52 +125,60 @@
         <div id="meta-text">
           <div id="meta-params">
             <div>
-              <label > title:    </label>
-              <input id = "hash", class="meta-param", type="text" value="" size="10" Maxlength="15", color="black">
+              <label> title: </label>
+              <input id="hash" , class="meta-param" , type="text" value="" size="10" Maxlength="15" , color="black">
             </div>
             <div>
-              <label> key:    </label>
-              <input id = "key", class="meta-param", type="text" value="" size="10" Maxlength="15", color="black">
+              <label> key: </label>
+              <input id="key" , class="meta-param" , type="text" value="" size="10" Maxlength="15" , color="black">
             </div>
             <div>
               <label> mode: </label>
-              <input id = "mode", class="meta-param", type="text" value="" size="10" Maxlength="15">
+              <input id="mode" , class="meta-param" , type="text" value="" size="10" Maxlength="15">
             </div>
             <div>
               <label> bpm: </label>
-              <input id = "bpm", class="meta-param", type="text" value="" size="10" Maxlength="15">
+              <input id="bpm" , class="meta-param" , type="text" value="" size="10" Maxlength="15">
             </div>
             <div>
               <label> energy: </label>
-              <input id = "energy", class="meta-param", type="text" value="" size="10" Maxlength="15">
+              <input id="energy" , class="meta-param" , type="text" value="" size="10" Maxlength="15">
             </div>
             <div>
               <label> valence: </label>
-              <input id = "valence", class="meta-param", type="text" value="" size="10" Maxlength="15">
+              <input id="valence" , class="meta-param" , type="text" value="" size="10" Maxlength="15">
             </div>
             <div>
               <label> chords: </label>
-              <input id = "chords", class="meta-param", type="text" value="" size="10" Maxlength="15">
+              <input id="chords" , class="meta-param" , type="text" value="" size="10" Maxlength="15">
             </div>
             <div>
               <label> melodies: </label>
-              <textarea id = "melodies", class="meta-param", type="text" value="" size="10", cols="16" >
+              <textarea id="melodies" , class="meta-param" , type="text" value="" size="10" , cols="16">
               </textarea>
+            </div>
+            <button id="meta-button" class="flat">
+              <div id="loading-animation" style="display: none">
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>Save Meta
+            </button>
           </div>
-          <button id="meta-button" class="flat"><div id="loading-animation" style="display: none"><div></div><div></div><div></div></div>Save Meta</button>
+        </div>
+        <div id="decode-panel" class="panel">
+
         </div>
       </div>
-
     </div>
-  </div>
-  <div id="footer">
-    <span><a href="https://github.com/jacbz/Lofi" target="_blank" id="github">GitHub</a></span>
-  </div>
+    <div id="footer">
+      <span><a href="https://github.com/jacbz/Lofi" target="_blank" id="github">GitHub</a></span>
+    </div>
 
-  <!-- Dummy audio for Media Session API -->
-  <audio id="audio" src="silence.mp3" loop></audio>
-  <!-- Preload icons not immediately visible -->
-  <div id="preload-images" style="position: absolute"></div>
+    <!-- Dummy audio for Media Session API -->
+    <audio id="audio" src="silence.mp3" loop></audio>
+    <!-- Preload icons not immediately visible -->
+    <div id="preload-images" style="position: absolute"></div>
 </body>
 
 </html>
