@@ -225,7 +225,7 @@ class Player {
     // connect analyzer for visualizations
     const analyzer = new Tone.Analyser('fft', 32);
     this.gain.connect(analyzer);
-    
+
     const fadeOutBegin = this.currentTrack.length - this.currentTrack.fadeOutDuration;
     // schedule events to do every 100ms
     Tone.Transport.scheduleRepeat((time) => {
@@ -246,18 +246,8 @@ class Player {
         sampler.volume.value = volume - volumeOffset;
       }
     }, 0.1);
-  
+
     this.play();
-    setTimeout(async () => {
-      // the recorded audio is returned as a blob
-      const recording = await recorder.stop();
-      const title = this.currentTrack.title;
-      const url = URL.createObjectURL(recording);
-      const anchor = document.createElement("a");
-      anchor.download =  title + ".webm";
-      anchor.href = url;
-      anchor.click();
-    }, this.currentTrack.length * 1000);
   }
 
   /** Starts playback on the current track; the track must have been loaded */

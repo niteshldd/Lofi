@@ -185,14 +185,14 @@ $panel-border-radius: 6px;
 }
 
 
-#meta-panel {
+#decode-panel {
   width: 190px;
 
   .header {
     display: relative;
   }
 
-  #meta-text {
+  #decode-text {
     display: flex;
     flex-direction: column;
     height: $height - 16px;
@@ -200,7 +200,7 @@ $panel-border-radius: 6px;
     justify-content: space-between;
     color: black;
 
-    #meta-params {
+    #decode-params {
       color: black;
 
       label {
@@ -217,15 +217,99 @@ $panel-border-radius: 6px;
       }
 
       textarea {
-        width: 160px;
-        height: 101px;
+        width: 172px;
+        height: 63px;
         margin-top: 8px;
-        columns: 1;
+        margin-bottom: 4px;
       }
     }
   }
 
-  #meta-button {
+  #decode-button {
+    width: 100%;
+  }
+}
+
+#produce-panel {
+  width: 350px;
+
+  .header {
+    display: relative;
+  }
+
+  #produce-text {
+    display: flex;
+    flex-direction: column;
+    height: $height - 16px;
+    padding: 4px 8px 8px 8px;
+    justify-content: space-between;
+    color: black;
+
+    #produce-params {
+      color: black;
+
+      label {
+        width: 100px;
+        display: inline-block;
+        margin-top: 11px;
+        margin-bottom: 8px;
+      }
+
+      legend {
+        display: inline-block;
+
+      }
+
+      select {
+        width: 100px;
+        color: black;
+        margin-top: 8px;
+        margin-bottom: 8px;
+      }
+
+      input {
+        width: 200px;
+        color: black;
+        margin-top: 8px;
+        margin-bottom: 8px;
+
+      }
+
+      #chord-notes {
+        margin-top: 8px;
+        margin-bottom: 8px;
+        width: 210px;
+        // height: 50px;
+      }
+
+      #preset {
+        margin-top: 8px;
+        margin-bottom: 8px;
+        width: 210px;
+        height: 52px;
+      }
+
+      .vol {
+        margin-top: 8px;
+        margin-bottom: 8px;
+        width: 20px;
+        color: black;
+        background-color: #fff;
+      }
+
+      .short-label {
+        width: 30px;
+        margin-top: 11px;
+        margin-bottom: 8px;
+      }
+
+      .fix-params {
+        width: 50px;
+      }
+    }
+  }
+
+  #produce-button {
     width: 100%;
   }
 }

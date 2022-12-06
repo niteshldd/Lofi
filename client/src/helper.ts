@@ -25,6 +25,9 @@ export class Chord {
   symbol: string;
 
   notes: Tonal.NoteName[];
+  public constructor(init?: Partial<Chord>) {
+    Object.assign(this, init);
+  }
 }
 
 /** Shifts a given note by a number of octaves */

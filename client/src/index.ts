@@ -1,11 +1,14 @@
 import Sortable from 'sortablejs';
 import Player, { RepeatMode } from './player';
 import Producer from './producer';
-import { DEFAULT_OUTPUTPARAMS, HIDDEN_SIZE, OutputParams } from './params';
-import { decompress, randn } from './helper';
+import { DecodeParams, DEFAULT_OUTPUTPARAMS, HIDDEN_SIZE, OutputParams } from './params';
+import { decompress, randn, Chord } from './helper';
 import { decode } from './api';
+import { Instrument } from './instruments';
+import { InstrumentConfiguration, ProducerPreset } from './producer_presets';
 
 const player = new Player();
+const producer = new Producer();
 
 // check if local storage is available
 let localStorageAvailable = false;
@@ -108,34 +111,12 @@ generateButton.addEventListener('click', async () => {
   let params;
   try {
     params = await decode(numberArray);
+    params.octave = 3;
   } catch (err) {
     generateButton.textContent = 'Error!';
     return;
   }
-  const title = document.getElementById('hash') as HTMLInputElement;
-  title.value = params.title
-
-  const key = document.getElementById('key') as HTMLInputElement;
-  key.value = params.key.toString()
-
-  const mode = document.getElementById('mode') as HTMLInputElement;
-  mode.value = params.mode.toString()
-
-  const bpm = document.getElementById('bpm') as HTMLInputElement;
-  bpm.value = params.bpm.toString()
-
-  const energy = document.getElementById('energy') as HTMLInputElement;
-  energy.value = params.energy.toString()
-
-  const valence = document.getElementById('valence') as HTMLInputElement;
-  valence.value = params.valence.toString()
-
-  const chords = document.getElementById('chords') as HTMLInputElement;
-  chords.value = params.chords.toString()
-
-  const melodies = document.getElementById('melodies') as HTMLInputElement;
-  melodies.value = params.melodies.toString()
-
+  displayDecodeParams(params);
 
   // const producer = new Producer();
   // const track = producer.produce(params);
@@ -147,26 +128,161 @@ generateButton.addEventListener('click', async () => {
   loadingAnimation.style.display = 'none';
 });
 
+function displayDecodeParams(params: OutputParams) {
+  const title = document.getElementById('hash') as HTMLInputElement;
+  const key = document.getElementById('key') as HTMLInputElement;
+  const mode = document.getElementById('mode') as HTMLInputElement;
+  const bpm = document.getElementById('bpm') as HTMLInputElement;
+  const energy = document.getElementById('energy') as HTMLInputElement;
+  const valence = document.getElementById('valence') as HTMLInputElement;
+  const chords = document.getElementById('chords') as HTMLInputElement;
+  const octave = document.getElementById('octave') as HTMLInputElement;
+  const melodies = document.getElementById('melodies') as HTMLInputElement;
 
-// save meta button
-const metaButton = document.getElementById('meta-button') as HTMLButtonElement;
-metaButton.addEventListener('click', async () => {
+  key.value = params.key.toString();
+  title.value = params.title
+  mode.value = params.mode.toString();
+  bpm.value = params.bpm.toString();
+  energy.value = params.energy.toString();
+  valence.value = params.valence.toString();
+  chords.value = params.chords.toString();
+  octave.value = params.octave.toString();
+  melodies.value = params.melodies.map((m) => m.join(' ')).join('\n');
+}
+
+function getDecodeParams(): OutputParams {
+  const title = document.getElementById('hash') as HTMLInputElement;
+  const key = document.getElementById('key') as HTMLInputElement;
+  const mode = document.getElementById('mode') as HTMLInputElement;
+  const bpm = document.getElementById('bpm') as HTMLInputElement;
+  const energy = document.getElementById('energy') as HTMLInputElement;
+  const valence = document.getElementById('valence') as HTMLInputElement;
+  const chords = document.getElementById('chords') as HTMLInputElement;
+  const octave = document.getElementById('octave') as HTMLInputElement;
+  const melodies = document.getElementById('melodies') as HTMLInputElement;
+  return new OutputParams({
+    title: title.value,
+    key: parseInt(key.value),
+    mode: parseInt(mode.value),
+    bpm: parseInt(bpm.value),
+    energy: parseFloat(energy.value),
+    valence: parseFloat(valence.value),
+    chords: chords.value.split(',').map((c) => parseInt(c)),
+    octave: parseInt(octave.value),
+    melodies: melodies.value.split('\n').map((m) => m.split(' ').map((n) => parseInt(n))),
+  });
+}
+
+function displayProduceParams(params: DecodeParams) {
+  document.getElementById('hash-produce').innerText = params.title.slice(0, 10);
+  document.getElementById('tonic').innerText = params.tonic;
+  document.getElementById('mode-name').innerText = params.mode;
+  document.getElementById('bpm-mapped').innerText = params.bpm.toString();
+  const chord_scales = document.getElementById('chord-scales') as HTMLInputElement;
+  const note_scales = document.getElementById('note-scales') as HTMLInputElement;
+  const chords = document.getElementById('chord-notes') as HTMLTextAreaElement;
+
+  const bassLine_inst = document.getElementById('bassLine-inst') as HTMLSelectElement;
+  const bassLine_vol = document.getElementById('bassLine-vol') as HTMLInputElement;
+  const bassLine_os = document.getElementById('bassLine-os') as HTMLInputElement;
+  const harmony_inst = document.getElementById('harmony-inst') as HTMLSelectElement;
+  const harmony_vol = document.getElementById('harmony-vol') as HTMLInputElement;
+  const harmony_os = document.getElementById('harmony-os') as HTMLInputElement;
+  const melody_inst = document.getElementById('melody-inst') as HTMLSelectElement;
+  const melody_vol = document.getElementById('melody-vol') as HTMLInputElement;
+  const melody_os = document.getElementById('melody-os') as HTMLInputElement;
+  const fba_inst = document.getElementById('fba-inst') as HTMLSelectElement;
+  const fba_vol = document.getElementById('fba-vol') as HTMLInputElement;
+  const fba_os = document.getElementById('fba-os') as HTMLInputElement;
+  const fbap = document.getElementById('fbap') as HTMLInputElement;
+
+  note_scales.value = params.note_scales.toString();
+  chord_scales.value = params.chord_scales.toString();
+  chords.value = params.chords.map((c) => c.notes.join(' ')).join("\n");
+
+  bassLine_inst.selectedIndex = params.preset.bassLine.instrument;
+  bassLine_vol.value = params.preset.bassLine.volume.toString();
+  bassLine_os.value = params.preset.bassLine.octaveShift.toString();
+
+  harmony_inst.selectedIndex = params.preset.harmony.instrument;
+  harmony_vol.value = params.preset.harmony.volume.toString();
+  harmony_os.value = params.preset.harmony.octaveShift.toString();
+
+  melody_inst.selectedIndex = params.preset.melody.instrument;
+  melody_vol.value = params.preset.melody.volume.toString();
+  melody_os.value = params.preset.melody.octaveShift.toString();
+
+  fba_inst.selectedIndex = params.preset.firstBeatArpeggio ? params.preset.firstBeatArpeggio.instrument : -1;
+  fba_vol.value = params.preset.firstBeatArpeggio ? params.preset.firstBeatArpeggio.volume.toString() : "0";
+  fba_os.value = params.preset.firstBeatArpeggio ? params.preset.firstBeatArpeggio.octaveShift.toString() : "0";
+
+  fbap.value = params.preset.firstBeatArpeggioPattern.toString();
+};
+
+function getProduceParams(): DecodeParams {
+  const params = new DecodeParams();
+  params.title = document.getElementById('hash').innerText;
+  params.tonic = document.getElementById('tonic').innerText;
+  params.mode = document.getElementById('mode-name').innerText;
+  params.bpm = +document.getElementById('bpm-mapped').innerText;
+  params.note_scales = (document.getElementById('note-scales') as HTMLInputElement).value.split(',');
+  params.chord_scales = (document.getElementById('chord-scales') as HTMLInputElement).value.split(',');
+  params.chords = (document.getElementById('chord-notes') as HTMLTextAreaElement).value.split("\n").map((c) => new Chord({ empty: c == '', notes: c.split(' ') }));
+
+  const bassLine_inst = document.getElementById('bassLine-inst') as HTMLSelectElement;
+  const bassLine_vol = document.getElementById('bassLine-vol') as HTMLInputElement;
+  const bassLine_os = document.getElementById('bassLine-os') as HTMLInputElement;
+  const harmony_inst = document.getElementById('harmony-inst') as HTMLSelectElement;
+  const harmony_vol = document.getElementById('harmony-vol') as HTMLInputElement;
+  const harmony_os = document.getElementById('harmony-os') as HTMLInputElement;
+  const melody_inst = document.getElementById('melody-inst') as HTMLSelectElement;
+  const melody_vol = document.getElementById('melody-vol') as HTMLInputElement;
+  const melody_os = document.getElementById('melody-os') as HTMLInputElement;
+  const fba_inst = document.getElementById('fba-inst') as HTMLSelectElement;
+  const fba_vol = document.getElementById('fba-vol') as HTMLInputElement;
+  const fba_os = document.getElementById('fba-os') as HTMLInputElement;
+  const fbap = document.getElementById('fbap') as HTMLInputElement;
+
+  let bassPrest = new InstrumentConfiguration({
+    instrument: +bassLine_inst.selectedIndex,
+    volume: +bassLine_vol.value,
+    octaveShift: +bassLine_os.value
+  });
+
+  let harmonyPrest = new InstrumentConfiguration({
+    instrument: +harmony_inst.selectedIndex,
+    volume: +harmony_vol.value,
+    octaveShift: +harmony_os.value
+  });
+
+  let melodyPrest = new InstrumentConfiguration({
+    instrument: +melody_inst.selectedIndex,
+    volume: +melody_vol.value,
+    octaveShift: +melody_os.value
+  });
+
+  let firstBeatArpeggioPrest = fba_inst.selectedIndex !== -1 ? new InstrumentConfiguration({
+    instrument: +fba_inst.selectedIndex,
+    volume: +fba_vol.value,
+    octaveShift: +fba_os.value
+  }) : null;
+
+  let firstBeatArpeggioPatternPrest = fbap.value.split(',').map((c) => +c);
+
+  params.preset = new ProducerPreset({ bassLine: bassPrest, harmony: harmonyPrest, melody: melodyPrest, firstBeatArpeggio: firstBeatArpeggioPrest, firstBeatArpeggioPattern: firstBeatArpeggioPatternPrest });
+  return params
+}
+
+// decode button
+const decodeButton = document.getElementById('decode-button') as HTMLButtonElement;
+decodeButton.addEventListener('click', async () => {
   generateButton.disabled = true;
   loadingAnimation.style.display = null;
-
-  var str2num = (str_arr: Array<string>) => {
-    let num_arr: Array<number>
-    for (let i=0;i<str_arr.length; i++){
-      num_arr.push(+str_arr[i])
-    }
-    return num_arr
-  }
-
   let params = new OutputParams()
   try {
     const title = document.getElementById('hash') as HTMLInputElement;
     params.title = title.value
-    
+
     const key = document.getElementById('key') as HTMLInputElement;
     params.key = +key.value
 
@@ -185,19 +301,22 @@ metaButton.addEventListener('click', async () => {
     const chords = document.getElementById('chords') as HTMLInputElement;
     let chords_arr = chords.value.split(',')
     params.chords = new Array<number>();
-    for (let i=0; i < 8; i++){
+    for (let i = 0; i < 8; i++) {
       params.chords.push(+chords_arr[i])
     }
+
+    const octave = document.getElementById('octave') as HTMLInputElement;
+    params.octave = +octave.value;
 
     const melodies = document.getElementById('melodies') as HTMLInputElement;
     var melody_arr = melodies.value.split(',')
     params.melodies = [[0]]
     params.melodies.pop()
-    for (let i=0; i < 8; i++){
-      melody_arr.slice(i*8, i*8+8)
+    for (let i = 0; i < 8; i++) {
+      melody_arr.slice(i * 8, i * 8 + 8)
       let melody_nums: number[] = melody_arr.map((s) => {
         let n: number
-        n=+s
+        n = +s
         return n
       })
       params.melodies.push(melody_nums)
@@ -208,7 +327,8 @@ metaButton.addEventListener('click', async () => {
     return;
   }
 
-  const producer = new Producer();
+  let decode_params = producer.decode(params);
+  displayProduceParams(decode_params);
   const track = producer.produce(params);
   player.addToPlaylist(track, true);
   // scroll to end of playlist
@@ -218,6 +338,13 @@ metaButton.addEventListener('click', async () => {
   loadingAnimation.style.display = 'none';
 });
 
+// produce button
+const produceButton = document.getElementById('produce-button') as HTMLButtonElement;
+produceButton.addEventListener('click', async () => {
+  const params = getProduceParams();
+  params.outputParams = getDecodeParams();
+  const track = producer.produce_track(params);
+});
 
 /** Formats seconds into an MM:SS string */
 const formatTime = (seconds: number) => {

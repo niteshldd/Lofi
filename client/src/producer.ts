@@ -2,7 +2,7 @@ import * as Tonal from '@tonaljs/tonal';
 import * as Tone from 'tone';
 import { Time } from 'tone/build/esm/core/type/Units';
 import { InstrumentNote, SampleLoop, Track } from './track';
-import { OutputParams } from './params';
+import { DecodeParams, OutputParams } from './params';
 import {
   addTime,
   Chord,
@@ -71,6 +71,7 @@ class Producer {
 
   instrumentNotes: InstrumentNote[] = [];
 
+  swing: boolean;
   /** Drum beat timings, as tuples of (isStart, Time) */
   drumbeatTimings: [boolean, Time][] = [];
 
@@ -78,8 +79,8 @@ class Producer {
   produce(params: OutputParams): Track {
     // must be 70, 75, 80, 85, 90, 95 or 100
     let bpm = Math.round(params.bpm / 5) * 5;
-    if (bpm < 70) bpm = 70;
-    if (bpm > 100) bpm = 100;
+    // if (bpm < 70) bpm = 70;
+    // if (bpm > 100) bpm = 100;
     this.bpm = bpm;
 
     // tonic note, e.g. 'G'
@@ -93,7 +94,7 @@ class Producer {
 
     // array of notes, e.g. ["C", "D", "E", "F", "G", "A", "B"]
     this.notesInScale = Tonal.Mode.notes(this.mode, this.tonic);
-    this.notesInScalePitched = Tonal.Mode.notes(this.mode, `${this.tonic}3`);
+    this.notesInScalePitched = Tonal.Mode.notes(this.mode, `${this.tonic}${params.octave}`);
 
     // array of triads, e.g. ["C", "Dm", "Em", "F", "G", "Am", "Bdim"]
     this.chordsInScale = Tonal.Mode.triads(this.mode, this.tonic);
@@ -105,7 +106,8 @@ class Producer {
     this.preset = Presets.selectPreset(this.valence, this.energy);
 
     // swing with probability 1/10
-    const swing = randomFromInterval(1, 10, this.energy) <= 1;
+    this.swing = randomFromInterval(1, 10, this.energy) <= 1;
+
 
     this.chordsTonal = this.chords.map((c, chordNo) => {
       const chordIndex = this.chords[chordNo] - 1;
@@ -143,6 +145,7 @@ class Producer {
     });
 
     const title = params.title || `Lofi track in ${this.tonic} ${this.mode}`;
+    const swing = this.swing
     const track = new Track({
       title,
       swing,
@@ -161,6 +164,113 @@ class Producer {
     });
     return track;
   }
+
+  /** decode params */
+  decode(params: OutputParams) {
+    let bpm = Math.round(params.bpm / 5) * 5;
+    // if (bpm < 70) bpm = 70;
+    // if (bpm > 100) bpm = 100;
+    this.bpm = bpm;
+
+    // tonic note, e.g. 'G'
+    this.tonic = keyNumberToString(params.key);
+    this.keyNum = params.key;
+
+    // musical mode, e.g. 'ionian'
+    this.mode = Tonal.Mode.names()[params.mode - 1];
+    this.simplifyKeySignature();
+    this.modeNum = params.mode;
+
+    // array of notes, e.g. ["C", "D", "E", "F", "G", "A", "B"]
+    this.notesInScale = Tonal.Mode.notes(this.mode, this.tonic);
+    this.notesInScalePitched = Tonal.Mode.notes(this.mode, `${this.tonic}${params.octave}`);
+
+    // array of triads, e.g. ["C", "Dm", "Em", "F", "G", "Am", "Bdim"]
+    this.chordsInScale = Tonal.Mode.triads(this.mode, this.tonic);
+
+    this.energy = params.energy;
+    this.valence = params.valence;
+    this.chords = params.chords;
+
+    this.preset = Presets.selectPreset(this.valence, this.energy);
+    this.chordsTonal = this.chords.map((c, chordNo) => {
+      const chordIndex = this.chords[chordNo] - 1;
+      const chordString = this.chordsInScale[chordIndex];
+      // e.g. Chord.getChord("maj7", "G4")
+      return Tonal.Chord.getChord(
+        Tonal.Chord.get(chordString).aliases[0],
+        `${this.notesInScale[chordIndex]}${params.octave}`
+      );
+    });
+    this.melodies = params.melodies;
+
+    var decode_params = new DecodeParams({
+      title: params.title,
+      tonic: this.tonic,
+      mode: this.mode,
+      bpm: this.bpm,
+      note_scales: this.notesInScalePitched,
+      chord_scales: this.chordsInScale,
+      chords: this.chordsTonal,
+      preset: this.preset
+    });
+    return decode_params
+  }
+
+  produce_track(params: DecodeParams): Track {
+    this.tonic = params.tonic;
+    this.mode = params.mode;
+    this.bpm = params.bpm;
+    this.notesInScalePitched = params.note_scales;
+    this.chordsInScale = params.chord_scales;
+    this.chordsTonal = params.chords;
+    this.preset = params.preset;
+
+    this.introLength = this.produceIntro();
+    this.mainLength = this.produceMain();
+    this.outroLength = this.produceOutro();
+
+    this.numMeasures = this.introLength + this.mainLength + this.outroLength;
+    this.produceFx();
+
+    // drumbeat
+    const [drumbeatGroup, drumbeatIndex] = selectDrumbeat(this.bpm, this.energy);
+    this.drumbeatTimings.sort(
+      ([_, time], [__, time2]) => Tone.Time(time).toSeconds() - Tone.Time(time2).toSeconds()
+    );
+    let currentStartTime: Time = null;
+    this.drumbeatTimings.forEach(([isStart, time]) => {
+      if (isStart) {
+        if (!currentStartTime) {
+          currentStartTime = time;
+        }
+      } else if (currentStartTime) {
+        this.addSample(drumbeatGroup, drumbeatIndex, `${currentStartTime}:0`, `${time}:0`);
+        currentStartTime = null;
+      }
+    });
+
+    const title = params.title || `Lofi track in ${this.tonic} ${this.mode}`;
+    const swing = this.swing
+    const track = new Track({
+      title,
+      swing,
+      key: this.tonic,
+      keyNum: this.keyNum,
+      mode: this.mode,
+      modeNum: this.modeNum,
+      numMeasures: this.numMeasures,
+      bpm: this.bpm,
+      samples: this.samples,
+      sampleLoops: this.sampleLoops,
+      instruments: this.instruments,
+      instrumentNotes: this.instrumentNotes,
+      color: randomColor(this.energy + this.valence),
+      outputParams: params.outputParams
+    });
+    return track;
+  }
+  /** generate tracks*/
 
   /** Produces the track's intro and returns the number of measures */
   produceIntro(): number {
@@ -240,9 +350,8 @@ class Producer {
         }
         // bass line: on the first beat of every measure
         if (this.preset.bassLine) {
-          const rootNote = `${this.notesInScale[scaleDegree - 1]}${
-            1 + this.preset.bassLine.octaveShift
-          }`;
+          const rootNote = `${this.notesInScale[scaleDegree - 1]}${1 + this.preset.bassLine.octaveShift
+            }`;
           // get a random bass pattern
           const bassPatternNo = randomFromInterval(
             0,
