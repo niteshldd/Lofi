@@ -10,7 +10,7 @@
 </head>
 
 <body>
-  <div id="header">LOFI PLAYGROUND</div>
+  <div id="header">LOFI DEV</div>
   <div id="center">
     <div id="intro-text" class="panel">
       <span>Our machine learning model has learned to represent a lofi track as a vector of 100 features. Each slider in
@@ -99,74 +99,65 @@
           <div id="playlist-tracks"></div>
         </div>
       </div>
-      <div id="slider-panel" class="panel">
-        <div class="header">
-          <div class="header-text">LATENT SPACE</div>
-          <button id="help" class="plain"></button>
-        </div>
-        <div id="slider-panel-content">
-          <div id="sliders">
-            <button id="refresh-button" class="plain" title="Sample new values from a normal distribution"></button>
-          </div>
-          <button id="generate-button" class="flat">
-            <div id="loading-animation" style="display: none">
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>Generate
-          </button>
-        </div>
-      </div>
+    </div>
+    <div id="editor">
       <div id="decode-panel" class="panel">
         <div class="header">
           <div class="header-text">DECODE</div>
         </div>
+        <button id="generate-button" class="flat">
+          <div id="loading-animation" style="display: none">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>Generate
+        </button>
+        <button id="decode-button" class="flat">
+          <div id="loading-animation" style="display: none">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>Decode
+        </button>
         <div id="decode-text">
           <div id="decode-params">
             <div>
-              <label> title </label>
+              <label> title: </label>
               <input id="hash" , class="decode-param" , type="text" value="" size="10" , color="black">
             </div>
             <div>
-              <label> key </label>
+              <label> key: </label>
               <input id="key" , class="decode-param" , type="text" value="" size="10" , color="black">
             </div>
             <div>
-              <label> mode </label>
+              <label> mode: </label>
               <input id="mode" , class="decode-param" , type="text" value="" size="10">
             </div>
             <div>
-              <label> bpm </label>
+              <label> bpm: </label>
               <input id="bpm" , class="decode-param" , type="text" value="" size="10">
             </div>
             <div>
-              <label> energy </label>
+              <label> energy: </label>
               <input id="energy" , class="decode-param" , type="text" value="" size="10">
             </div>
             <div>
-              <label> valence </label>
+              <label> valence: </label>
               <input id="valence" , class="decode-param" , type="text" value="" size="10">
             </div>
             <div>
-              <label> chords </label>
+              <label> chords: </label>
               <input id="chords" , class="decode-param" , type="text" value="" size="10">
             </div>
             <div>
-              <label> octave </label>
+              <label> octave: </label>
               <input id="octave" , class="decode-param" , type="text" value="" size="10">
             </div>
             <div>
-              <label> melodies: </label>
+              <label style="float:left"> melody: </label>
               <textarea id="melodies" , class="decode-param" , type="text" value="" size="10">
               </textarea>
             </div>
-            <button id="decode-button" class="flat">
-              <div id="loading-animation" style="display: none">
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>Decode
-            </button>
           </div>
         </div>
       </div>
@@ -174,20 +165,28 @@
         <div class="header">
           <div class="header-text">PRODUCE</div>
         </div>
+        <button id="produce-button" class="flat">
+          <div id="loading-animation" style="display: none">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>Produce
+        </button>
         <div id="produce-text">
           <div id="produce-params">
-            <div>
-              <label> title: </label>
-              <label id="hash-produce" , class="produce-param" , type="text" value="" size="10" Maxlength="20" ,
-                color="black">
-            </div>
             <div>
               <label class="fix-params"> tonic: </label>
               <label id="tonic" , class="fix-params" , type="text" value="" size="10"> </label>
               <label class="fix-params"> mode: </label>
               <label id="mode-name" , class="fix-params" , type="text" value="" size="10"> </label>
+            </div>
+            <div>
               <label class="fix-params"> bpm: </label>
               <label id="bpm-mapped" , class="fix-params" , type="text" value="" size="10"> </label>
+              <label id="swing-label"> swing: </label>
+              <label class="switch">
+                <input id="swing-check" , type="checkbox">
+              </label>
             </div>
             <div>
               <label> note scales: </label>
@@ -198,14 +197,9 @@
               <input id="chord-scales" , class="produce-param" , type="text" value="" size="10">
             </div>
             <div>
-              <label> chords: </label>
-              <textarea id="chord-notes" , class="produce-param" , type="text" value="" size="10">
-              </textarea>
-            </div>
-            <div>
               <!-- <label> preset: </label> -->
               <div>
-                <label> baseLine </label>
+                <label> bassLine: </label>
                 <select id="bassLine-inst" , class="inst">
                   <option value="0"> Piano </option>
                   <option value="1"> SoftPiano </option>
@@ -222,7 +216,7 @@
                 <input id="bassLine-os" , class="vol"> </input>
               </div>
               <div>
-                <label> harmony </label>
+                <label> harmony: </label>
                 <select id="harmony-inst" , class="inst">
                   <option value="0"> Piano </option>
                   <option value="1"> SoftPiano </option>
@@ -239,7 +233,7 @@
                 <input id="harmony-os" , class="vol"> </input>
               </div>
               <div>
-                <label> FBA </label>
+                <label> FBA: </label>
                 <select id="fba-inst" , class="inst">
                   <option value="0"> Piano </option>
                   <option value="1"> SoftPiano </option>
@@ -256,11 +250,7 @@
                 <input id="fba-os" , class="vol"> </input>
               </div>
               <div>
-                <label> FBAP </label>
-                <input id="fbap" , class="produce-param" , type="text" value="" size="10"> </input>
-              </div>
-              <div>
-                <label> melody </label>
+                <label> melody: </label>
                 <select id="melody-inst" , class="inst">
                   <option value="0"> Piano </option>
                   <option value="1"> SoftPiano </option>
@@ -276,23 +266,56 @@
                 <label class="short-label"> os </label>
                 <input id="melody-os" , class="vol"> </input>
               </div>
-
+              <div>
+                <label> FBAP: </label>
+                <input id="fbap" , class="produce-param" , type="text" value="" size="10"> </input>
+              </div>
               <!-- <textarea id="preset" , class="produce-param" , type="text" value="" size="10"> -->
             </div>
-            <button id="produce-button" class="flat">
-              <div id="loading-animation" style="display: none">
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>Produce
-            </button>
+            <div>
+              <label id="chord-notes-label" , style="float:left"> chords: </label>
+              <textarea id="chord-notes" , class="produce-param" , type="text" value="" size="10">
+              </textarea>
+            </div>
           </div>
         </div>
       </div>
+      <div id="track-panel" class="panel">
+        <div class="header">
+          <div class="header-text">TRACK</div>
+        </div>
+        <!-- <div id="track-table-div", style="overflow-x: auto; overflow-y: auto; height: 650px;"> -->
+        <div id="track-table-div" , style="overflow-x: auto; overflow-y: auto;">
+          <table id="track-table" , border="1">
+            <colgroup>
+              <col span="1" style="width: 30%;">
+              <col span="1" style="width: 20%;">
+              <col span="1" style="width: 20%;">
+              <col span="1" style="width: 20%;">
+              <col span="1" style="width: 10%;">
+            </colgroup>
+            <tr>
+              <th> inst </th>
+              <th> pitch </th>
+              <th> time </th>
+              <th> dur </th>
+              <th> velocity </th>
+            </tr>
+          </table>
+          <!-- <textarea id="inst-notes"> </textarea> -->
+        </div>
+        <!-- <button id="burn-button" class="flat">
+          <div id="loading-animation" style="display: none">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>Burn
+        </button> -->
+      </div>
     </div>
-    <div id="footer">
-      <span><a href="https://github.com/jacbz/Lofi" target="_blank" id="github">GitHub</a></span>
-    </div>
+    <!-- <div id="footer"> -->
+    <!-- <span><a href="https://github.com/jacbz/Lofi" target="_blank" id="github">GitHub</a></span> -->
+    <!-- </div> -->
 
     <!-- Dummy audio for Media Session API -->
     <audio id="audio" src="silence.mp3" loop></audio>

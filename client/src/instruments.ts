@@ -17,8 +17,41 @@ export enum Instrument {
   /** Electric guitar */
   ElectricGuitar,
   /** Synth (Tone.js) */
-  Synth
+  Synth,
 }
+
+
+export const getInstrumentName = (instrument: Instrument) => {
+  let name = '';
+  switch (instrument) {
+    case Instrument.Piano: name='Piano'; break;
+    case Instrument.SoftPiano: name='Soft-Piano'; break;
+    case Instrument.ElectricPiano: name='E-Piano'; break;
+    case Instrument.Harp: name='Harp'; break;
+    case Instrument.AcousticGuitar: name='AC-Guitar'; break;
+    case Instrument.BassGuitar: name='B-Guitar'; break;
+    case Instrument.ElectricGuitar: name='E-Guitar'; break;
+    case Instrument.Synth: name='Synth'; break;
+  }
+  return name;
+}
+
+
+export const getInstrumentIdx = (instrumentName: string) => {
+  let idx = -1;
+  switch (instrumentName) {
+    case 'Piano': idx=0; break;
+    case 'Soft-Piano': idx=1; break;
+    case 'E-Piano': idx=2; break;
+    case 'Harp': idx=3; break;
+    case 'AC-Guitar': idx=4; break;
+    case 'B-Guitar': idx=5; break;
+    case 'E-Guitar': idx=6; break;
+    case 'Synth': idx=7; break;
+  }
+  return idx;
+}
+
 
 const BASE_URL = `${SAMPLES_BASE_URL}/instruments`;
 export const getInstrument = (instrument: Instrument) => {
