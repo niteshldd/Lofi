@@ -2,7 +2,7 @@ import * as Tonal from '@tonaljs/tonal';
 import * as Tone from 'tone';
 import { Time } from 'tone/build/esm/core/type/Units';
 import { InstrumentNote, SampleLoop, Track } from './track';
-import { DecodeParams, OutputParams } from './params';
+import { ProduceParams, OutputParams } from './params';
 import {
   addTime,
   Chord,
@@ -203,8 +203,8 @@ class Producer {
       );
     });
     this.melodies = params.melodies;
-
-    var decode_params = new DecodeParams({
+    this.swing = randomFromInterval(1, 10, this.energy) <= 1;
+    var prodceParams = new ProduceParams({
       title: params.title,
       tonic: this.tonic,
       mode: this.mode,
@@ -212,12 +212,13 @@ class Producer {
       note_scales: this.notesInScalePitched,
       chord_scales: this.chordsInScale,
       chords: this.chordsTonal,
-      preset: this.preset
+      preset: this.preset,
+      swing: this.swing
     });
-    return decode_params
+    return prodceParams
   }
 
-  produce_track(params: DecodeParams): Track {
+  produce_track(params: ProduceParams): Track {
     this.tonic = params.tonic;
     this.mode = params.mode;
     this.bpm = params.bpm;
@@ -225,6 +226,7 @@ class Producer {
     this.chordsInScale = params.chord_scales;
     this.chordsTonal = params.chords;
     this.preset = params.preset;
+    this.swing = params.swing;
 
     this.introLength = this.produceIntro();
     this.mainLength = this.produceMain();
@@ -298,7 +300,6 @@ class Producer {
 
       this.produceIteration(iterationMeasure);
     }
-
     return length;
   }
 

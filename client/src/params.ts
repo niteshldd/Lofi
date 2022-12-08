@@ -40,7 +40,7 @@ export class OutputParams {
   }
 }
 
-export class DecodeParams {
+export class ProduceParams {
   title: string;
   tonic: string;
   mode: string;
@@ -50,7 +50,8 @@ export class DecodeParams {
   chords: Chord[];
   preset: ProducerPreset;
   outputParams: OutputParams;
-  public constructor(init?: Partial<DecodeParams>) {
+  swing: boolean;
+  public constructor(init?: Partial<ProduceParams>) {
     Object.assign(this, init);
   }
 }

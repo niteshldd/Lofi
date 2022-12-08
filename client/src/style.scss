@@ -85,6 +85,14 @@ $panel-border-radius: 6px;
   display: flex;
   flex-direction: row;
   gap: 12px;
+  // flex-direction: column;
+}
+
+#editor {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  height: 400;
 }
 
 .header {
@@ -102,91 +110,8 @@ $panel-border-radius: 6px;
   }
 }
 
-#slider-panel {
-  width: 190px;
-
-  .header {
-    display: relative;
-  }
-
-  #help {
-    cursor: help;
-    position: absolute;
-    right: 4px;
-    top: 3px;
-    width: 20px;
-    height: 20px;
-    background-image: url('icons/help.svg');
-  }
-
-  #slider-panel-content {
-    display: flex;
-    flex-direction: column;
-    height: $height - 16px;
-    padding: 4px 8px 8px 8px;
-    justify-content: space-between;
-  }
-
-  #sliders {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    margin-left: -8px;
-    margin-right: -8px;
-
-    #refresh-button {
-      position: absolute;
-      top: 2px;
-      right: 4px;
-      border: 1px white;
-      background-image: url('icons/refresh.svg');
-    }
-  }
-
-  $slider-height: 3.7px;
-
-  input[type='range'] {
-    border-radius: 0;
-    margin: 0;
-    height: $slider-height;
-
-    @mixin slider-track {
-      height: $slider-height;
-    }
-
-    @mixin slider-thumb {
-      height: $slider-height;
-      width: $slider-height;
-      margin-top: 0.25px;
-      border-radius: 0;
-    }
-
-    &::-webkit-slider-runnable-track {
-      @include slider-track;
-    }
-
-    &::-moz-range-track {
-      @include slider-track;
-    }
-
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      @include slider-thumb;
-    }
-
-    &::-moz-range-thumb {
-      @include slider-thumb;
-    }
-  }
-
-  #generate-button {
-    width: 100%;
-  }
-}
-
-
 #decode-panel {
-  width: 190px;
+  width: 300px;
 
   .header {
     display: relative;
@@ -206,26 +131,32 @@ $panel-border-radius: 6px;
       label {
         width: 50px;
         display: inline-block;
+        margin-right: 10px;
       }
 
       input {
-        width: 100px;
+        width: 195px;
         color: black;
         margin-top: 8px;
         margin-bottom: 8px;
-
       }
 
       textarea {
-        width: 172px;
-        height: 63px;
-        margin-top: 8px;
-        margin-bottom: 4px;
+        // width: 172px;
+        width: 200px;
+        height: 272px;
+        margin-left: 5px;
       }
     }
   }
 
   #decode-button {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  #generate-button {
+    margin-top: 5px;
     width: 100%;
   }
 }
@@ -265,6 +196,7 @@ $panel-border-radius: 6px;
         color: black;
         margin-top: 8px;
         margin-bottom: 8px;
+        background-color: white;
       }
 
       input {
@@ -273,6 +205,17 @@ $panel-border-radius: 6px;
         margin-top: 8px;
         margin-bottom: 8px;
 
+      }
+
+      option {
+        color: black;
+        background-color: white;
+      }
+
+      switch {
+        width: 10px;
+        position: relative;
+        display: inline-block;
       }
 
       #chord-notes {
@@ -287,6 +230,11 @@ $panel-border-radius: 6px;
         margin-bottom: 8px;
         width: 210px;
         height: 52px;
+      }
+
+      .swing-label {
+        margin-left: 8px;
+        width: 20px;
       }
 
       .vol {
@@ -306,11 +254,43 @@ $panel-border-radius: 6px;
       .fix-params {
         width: 50px;
       }
+
+      #chord-notes {
+        width: 203px;
+        height: 240px;
+        margin-left: 5px;
+      }
+
+      #chord-notes-label {
+        width: 100px;
+        margin-top: 11px;
+        margin-bottom: 8px;
+      }
     }
   }
 
   #produce-button {
+    margin-top: 5px;
     width: 100%;
+  }
+}
+
+
+#track-panel {
+  width: 400px;
+
+  .header {
+    display: relative;
+  }
+
+  #track-table {
+    width: 100%;
+  }
+
+  #track-table-div {
+    height: 630px;
+    overflow-y: scroll;
+    margin-bottom: 20px;
   }
 }
 
@@ -545,6 +525,7 @@ $panel-border-radius: 6px;
     flex-direction: column;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+    width: 100px;
 
     @media not screen and (max-width: 900px) {
       backdrop-filter: none;
@@ -960,11 +941,11 @@ $responsive-max-width: 360px;
     order: 2;
   }
 
-  #main {
-    flex-direction: column;
-    align-items: center;
-    gap: 36px;
-  }
+  // #main {
+  //   flex-direction: column;
+  //   align-items: center;
+  //   gap: 36px;
+  // }
 
   #player-panel {
     flex-direction: column;

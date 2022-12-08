@@ -20,6 +20,10 @@ module.exports = {
             url: false
           }
         }, 'sass-loader']
+      },
+      {
+        test: /\.(mp3|wav|ogg)$/,
+        use: 'file-loader',
       }
     ]
   },
