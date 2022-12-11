@@ -250,6 +250,15 @@ function updateProduceParams(): ProduceParams {
   produceParams.meter[0] = parseInt(meterNumerator.value);
   produceParams.meter[1] = parseInt(meterDenominator.value);
 
+  produceParams.title = title.value;
+  produceParams.tonic = document.getElementById('tonic').innerText;
+  produceParams.mode = document.getElementById('mode-name').innerText;
+  produceParams.bpm = parseInt(document.getElementById('bpm-mapped').innerText);
+  produceParams.note_scales = note_scales.value.split(',');
+  produceParams.chord_scales = chord_scales.value.split(',');
+  produceParams.chords = chords.value.split("\n").map((c) => new Chord({ empty: c == '', notes: c.split(' ') }));
+  produceParams.swing = document.getElementById('swing-check').innerText == 'true';
+
   let bassPrest = new InstrumentConfiguration({
     instrument: +bassLine_inst.selectedIndex,
     volume: +bassLine_vol.value,
