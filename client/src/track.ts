@@ -34,9 +34,11 @@ class Track {
   fadeOutDuration: number = 10;
 
   /** Total length of the track in seconds */
-  get length() {
-    return Math.ceil(((this.numMeasures * 4) / this.bpm) * 60);
-  }
+  // get length() {
+  //   return Math.ceil(((this.numMeasures * 4) / this.bpm) * 60);
+  // }
+
+  length: number;
 
   /** List of (sampleGroupName, sampleIndex) */
   samples: [string, number][];
@@ -55,6 +57,8 @@ class Track {
 
   /** The output params that generated this track */
   outputParams: OutputParams;
+
+  meter: number[] = [4, 4];
 
   public constructor(init?: Partial<Track>) {
     Object.assign(this, init);

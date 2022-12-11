@@ -51,6 +51,7 @@ export class ProduceParams {
   preset: ProducerPreset;
   outputParams: OutputParams;
   swing: boolean;
+  meter: number[] = [4, 4];
   public constructor(init?: Partial<ProduceParams>) {
     Object.assign(this, init);
   }

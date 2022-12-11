@@ -160,6 +160,7 @@ class Producer {
       instruments: this.instruments,
       instrumentNotes: this.instrumentNotes,
       color: randomColor(this.energy + this.valence),
+      length: Math.ceil(((this.numMeasures * 4) / this.bpm) * 60),
       outputParams: params
     });
     return track;
@@ -268,7 +269,9 @@ class Producer {
       instruments: this.instruments,
       instrumentNotes: this.instrumentNotes,
       color: randomColor(this.energy + this.valence),
-      outputParams: params.outputParams
+      outputParams: params.outputParams,
+      length: Math.ceil(((this.numMeasures * 4) / this.bpm) * 60),
+      meter: params.meter
     });
     return track;
   }

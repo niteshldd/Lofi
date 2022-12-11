@@ -27,7 +27,8 @@ try {
 
 
 // try to load playlist from local storage
-let playlistToLoad: OutputParams[] = [];
+// let playlistToLoad: OutputParams[] = [];
+let playlistToLoad: Track[] = [];
 if (localStorageAvailable) {
   const localStoragePlaylist = localStorage.getItem('playlist');
   if (localStoragePlaylist && localStoragePlaylist.length > 0 && localStoragePlaylist[0] != null) {
@@ -43,7 +44,8 @@ if (localStorageAvailable) {
 }
 const updateLocalStorage = () => {
   if (localStorageAvailable) {
-    localStorage.setItem('playlist', JSON.stringify(player.playlist.map((t) => t.outputParams)));
+    // localStorage.setItem('playlist', JSON.stringify(player.playlist.map((t) => t.outputParams)));
+    localStorage.setItem('playlist', JSON.stringify(player.playlist.map((t) => t)));
   }
 };
 player.updateLocalStorage = updateLocalStorage;
@@ -54,11 +56,7 @@ if (queryString.length > 0) {
   const compressedPlaylist = queryString === '?default' ? DEFAULT_OUTPUTPARAMS : queryString.substring(1);
   try {
     const decompressed = decompress(compressedPlaylist);
-    const outputParams: OutputParams[] = JSON.parse(decompressed);
-    playlistToLoad = [
-      ...playlistToLoad.filter((p) => outputParams.every((p2) => p2.title !== p.title)),
-      ...outputParams
-    ];
+    const storageTracks: Track[] = JSON.parse(decompressed);
     window.history.pushState({}, null, window.location.href.split('?')[0]);
   } catch (e) {
     console.log('Error parsing', compressedPlaylist);
@@ -66,11 +64,12 @@ if (queryString.length > 0) {
 }
 
 if (playlistToLoad.length > 0) {
-  const playlist = playlistToLoad.map((params) => {
-    const producer = new Producer();
-    return producer.produce(params);
-  });
-  player.playlist = playlist;
+  // const playlist = playlistToLoad.map((params) => {
+  //   const producer = new Producer();
+  //   return producer.produce(params);
+  // });
+  // player.playlist = playlist;
+  player.playlist = playlistToLoad
   updateLocalStorage();
 }
 
@@ -171,6 +170,9 @@ function displayProduceParams(params: ProduceParams) {
   document.getElementById('tonic').innerText = params.tonic;
   document.getElementById('mode-name').innerText = params.mode;
   document.getElementById('bpm-mapped').innerText = params.bpm.toString();
+  const meterNumerator = document.getElementById('meter-numerator') as HTMLInputElement;
+  const meterDenominator = document.getElementById('meter-denominator') as HTMLInputElement;
+
   const chord_scales = document.getElementById('chord-scales') as HTMLInputElement;
   const note_scales = document.getElementById('note-scales') as HTMLInputElement;
   const chords = document.getElementById('chord-notes') as HTMLTextAreaElement;
@@ -211,6 +213,9 @@ function displayProduceParams(params: ProduceParams) {
   fba_os.value = params.preset.firstBeatArpeggio ? params.preset.firstBeatArpeggio.octaveShift.toString() : "0";
   swing.value = params.swing.toString();
   fbap.value = params.preset.firstBeatArpeggioPattern.toString();
+  meterNumerator.value = params.meter[0].toString();
+  meterDenominator.value = params.meter[1].toString();
+
 };
 
 function updateProduceParams(): ProduceParams {
@@ -231,6 +236,8 @@ function updateProduceParams(): ProduceParams {
   const fba_vol = document.getElementById('fba-vol') as HTMLInputElement;
   const fba_os = document.getElementById('fba-os') as HTMLInputElement;
   const fbap = document.getElementById('fbap') as HTMLInputElement;
+  const meterNumerator = document.getElementById('meter-numerator') as HTMLInputElement;
+  const meterDenominator = document.getElementById('meter-denominator') as HTMLInputElement;
 
   produceParams.title = title.value;
   produceParams.tonic = document.getElementById('tonic').innerText;
@@ -240,6 +247,8 @@ function updateProduceParams(): ProduceParams {
   produceParams.chord_scales = chord_scales.value.split(',');
   produceParams.chords = chords.value.split("\n").map((c) => new Chord({ empty: c == '', notes: c.split(' ') }));
   produceParams.swing = document.getElementById('swing-check').innerText == 'true';
+  produceParams.meter[0] = parseInt(meterNumerator.value);
+  produceParams.meter[1] = parseInt(meterDenominator.value);
 
   let bassPrest = new InstrumentConfiguration({
     instrument: +bassLine_inst.selectedIndex,
@@ -339,8 +348,6 @@ produceButton.addEventListener('click', async () => {
   let producer = new Producer();
   producer.decode(decodeParams)
   const track = producer.produce_track(produceParams);
-  let instidx = produceParams.preset.bassLine.instrument;
-  let instName = Instrument[instidx];
   displayTrack(track);
   player.addToPlaylist(track, true);
   playlistContainer.scrollTop = playlistContainer.scrollHeight;

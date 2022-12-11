@@ -133,13 +133,8 @@ class Player {
     if (!this.currentTrack) {
       return;
     }
-    // Tone.Offline(({transport}) => {
-
-    // }, 4).then((buffer) => {
-    //   console.log(buffer);
-    // });
     this.isLoading = true;
-
+    Tone.Transport.timeSignature = this.currentTrack.meter
     this.gain = new Tone.Gain();
     this.isPlaying = true;
     this.setAudioWebApiMetadata();
@@ -152,6 +147,7 @@ class Player {
       return;
     }
 
+    
     await Tone.start();
     const recorder = new Tone.Recorder();
     recorder.start();
