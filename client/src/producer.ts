@@ -214,7 +214,8 @@ class Producer {
       chord_scales: this.chordsInScale,
       chords: this.chordsTonal,
       preset: this.preset,
-      swing: this.swing
+      swing: this.swing,
+      meter: [4, 4]
     });
     return prodceParams
   }
@@ -255,6 +256,7 @@ class Producer {
 
     const title = params.title || `Lofi track in ${this.tonic} ${this.mode}`;
     const swing = this.swing
+    const meter = params.meter.map((m) => m);
     const track = new Track({
       title,
       swing,
@@ -271,7 +273,7 @@ class Producer {
       color: randomColor(this.energy + this.valence),
       outputParams: params.outputParams,
       length: Math.ceil(((this.numMeasures * 4) / this.bpm) * 60),
-      meter: params.meter
+      meter: meter
     });
     return track;
   }

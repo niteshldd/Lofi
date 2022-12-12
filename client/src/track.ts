@@ -58,10 +58,11 @@ class Track {
   /** The output params that generated this track */
   outputParams: OutputParams;
 
-  meter: number[] = [4, 4];
+  meter: number[];
 
   public constructor(init?: Partial<Track>) {
     Object.assign(this, init);
+
   }
 }
 
