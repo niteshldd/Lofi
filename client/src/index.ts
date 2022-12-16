@@ -7,7 +7,8 @@ import { decode } from './api';
 import { InstrumentNote, SampleLoop, Track } from './track';
 import { getInstrumentName, Instrument} from './instruments';
 import { InstrumentConfiguration, ProducerPreset } from './producer_presets';
- 
+import JsZip from 'jszip';
+import FileSaver from 'file-saver';
 
 const player = new Player();
 // const producer = new Producer();
@@ -64,40 +65,22 @@ if (queryString.length > 0) {
 }
 
 if (playlistToLoad.length > 0) {
-  // const playlist = playlistToLoad.map((params) => {
-  //   const producer = new Producer();
-  //   return producer.produce(params);
-  // });
-  // player.playlist = playlist;
   player.playlist = playlistToLoad
   updateLocalStorage();
 }
 
 const instSelectorIds = ['bassLine-inst', 'harmony-inst', 'fba-inst', 'melody-inst'];
-const instNames = new Array<string>();
-
-for (var i = 0; ; i++) {
-  try {
-    let instName = Instrument[i];
-    if (instName == null) {
-      break;
-    }
-    instNames.push(instName);
-  } catch {
-    break;
-  }
-}
-
-for (var i = 0; i < instSelectorIds.length; i++) {
-  var instSelector = document.getElementById(instSelectorIds[i]) as HTMLSelectElement;
-  for (var j = 0; j < instNames.length; j++) {
-    var option = document.createElement('option');
-    option.text = instNames[j];
-    option.value = j.toString();
+const instNames = Object.keys(Instrument).filter((key) => isNaN(Number(key)));
+instSelectorIds.forEach((id) => {
+  const instSelector = document.getElementById(id) as HTMLSelectElement;
+  instNames.forEach(name => {
+    let option = document.createElement('option');
+    option.text = name;
+    option.value = Instrument[name as keyof typeof Instrument].toString();
     instSelector.add(option);
-  }
+  });
   instSelector.selectedIndex = -1;
-}
+});
 
 // Generate button
 const generateButton = document.getElementById('generate-button') as HTMLButtonElement;
@@ -670,3 +653,45 @@ for (const [action, handler] of actionsAndHandlers) {
   }
 }
 
+const recordButton = document.getElementById('record-button');
+const recordNum = document.getElementById('record-num')  as HTMLInputElement;
+recordButton.addEventListener('click', async () => {
+  loadingAnimation.style.display = null;
+  player.recordBlobs = [];
+  player.recordNum = parseInt(recordNum.value);
+  for (let i = 0; i < player.recordNum; i++) {
+    generateButton.click();
+    /**wait for generating done */
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    decodeButton.click();
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    produceButton.click();
+    await new Promise((resolve) => setTimeout(resolve, 2000+ player.currentTrack.length * 1000 ));
+    
+  }
+  const zip = JsZip();
+  player.recordBlobs.forEach((record) => {
+    let fname = record[1];
+    let fblob = record[0];
+    zip.file(fname, fblob);
+  });
+  zip.generateAsync({type: 'blob'}).then(zipFile => {
+    const currentDate = new Date().getTime();
+    const fileName = `recording-${currentDate}.zip`;
+    FileSaver.saveAs(zipFile, fileName);
+  });
+
+  player.recordBlobs = [];
+  player.recordNum = 0;
+  loadingAnimation.style.display = 'none';
+});
+
+
+const clearButton = document.getElementById('clear-button');
+clearButton.addEventListener('click', async () => {
+  for (let i = player.playlist.length; i > 0; i--) {
+      player.deleteTrack(i);
+  };
+});

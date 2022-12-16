@@ -4,6 +4,8 @@ import * as Samples from './samples';
 import { Track } from './track';
 import { compress } from './helper';
 
+
+
 /**
  * A class that plays a Track by synthesizing events in Tone.js.
  */
@@ -13,6 +15,11 @@ class Player {
 
   /** Current track in playlist being played */
   currentPlayingIndex: number;
+
+  /** Blob lists to be recorded and downloaded */
+  recordBlobs:  [Blob, string][] = [];
+  // recordBlobs:  [Promise<any>, string][] = [];
+  recordNum: number=2;
 
   /** Current track. Can be undefined */
   get currentTrack() {
@@ -211,6 +218,7 @@ class Player {
           noteTiming.velocity !== undefined ? noteTiming.velocity : 1
         );
       } else {
+        instrumentSampler.connect(recorder);
         instrumentSampler.triggerAttack(
           noteTiming.pitch,
           noteTiming.time,
@@ -244,6 +252,44 @@ class Player {
     }, 0.1);
 
     this.play();
+    
+    if (this.recordNum == 0) return;
+
+    // if (this.recordNum > this.recordBlobs.length) {
+    //   const recording = recorder.stop();
+    //   setTimeout(async() => {
+    //     await recording;
+    //     // const recording = await recorder.stop();
+    //     // this.recordBlobs.push([recording, `${this.currentTrack.title}.wav`]);
+    //     }, 1000*this.currentTrack.length);
+    //     recording.then(value => this.recordBlobs.push([value, `${this.currentTrack.title}.wav`]));
+    //   }
+
+    if (this.recordNum > this.recordBlobs.length) {
+      const trackTitle = this.currentTrack.title;
+      await new Promise((resolve) => setTimeout(async() => {
+        const recording = await recorder.stop();
+        this.recordBlobs.push([recording, `${trackTitle}.wav`]);
+        }, 1000*(this.currentTrack.length+1)));
+      }
+
+    // const recording = Promise.resolve(setTimeout(async() => {return recorder.stop()}, 1000*this.currentTrack.length));
+    // TODO use Promise.all to wait for all recordings to finish
+    // if (this.recordNum == this.recordBlobs.length) {
+    //   const zip = JsZip();
+    //   this.recordBlobs.forEach((record) => {
+    //     let fname = record[1];
+    //     let fblob = record[0];
+    //     zip.file(fname, fblob);
+    //   });
+    //   this.recordBlobs = [];
+    //   this.recordNum = 0;
+    //   zip.generateAsync({type: 'blob'}).then(zipFile => {
+    //     const currentDate = new Date().getTime();
+    //     const fileName = `recording-${currentDate}.zip`;
+    //     FileSaver.saveAs(zipFile, fileName);
+    //   });
+    // }
   }
 
   /** Starts playback on the current track; the track must have been loaded */

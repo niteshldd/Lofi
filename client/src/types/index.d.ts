@@ -18,3 +18,4 @@ declare module 'tonejs-instrument-trumpet-mp3';
 declare module 'tonejs-instrument-tuba-mp3'; 
 declare module 'tonejs-instrument-violin'; 
 declare module 'tonejs-instrument-xylophone'; 
+declare module 'file-saver'; 
