@@ -172,7 +172,9 @@ async function displayProduceParams(params: ProduceParams) {
   const swing = document.getElementById('swing-check') as HTMLInputElement;
   const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
   const presetName = document.getElementById('preset-name') as HTMLInputElement;
+  const drumbeatCheck = document.getElementById('drumbeat-check') as HTMLInputElement;
 
+  drumbeatCheck.checked = params.withDrumBeat;
   note_scales.value = params.note_scales.toString();
   chord_scales.value = params.chord_scales.toString();
   chords.value = params.chords.map((c) => c.notes.join(' ')).join("\n");
@@ -313,6 +315,8 @@ function updateProduceParams(): ProduceParams {
   const meterNumerator = document.getElementById('meter-numerator') as HTMLInputElement;
   const meterDenominator = document.getElementById('meter-denominator') as HTMLInputElement;
   const presetName = document.getElementById('preset-name') as HTMLInputElement;
+  const drumbeatCheck = document.getElementById('drumbeat-check') as HTMLInputElement;
+
 
   produceParams.title = title.value;
   produceParams.tonic = document.getElementById('tonic').innerText;
@@ -333,6 +337,7 @@ function updateProduceParams(): ProduceParams {
   produceParams.chord_scales = chord_scales.value.split(',');
   produceParams.chords = chords.value.split("\n").map((c) => new Chord({ empty: c == '', notes: c.split(' ') }));
   produceParams.swing = document.getElementById('swing-check').innerText == 'true';
+  produceParams.withDrumBeat = drumbeatCheck.checked;
 
   let bassPrest = new InstrumentConfiguration({
     instrument: +bassLine_inst.selectedIndex,

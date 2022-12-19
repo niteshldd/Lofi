@@ -238,21 +238,24 @@ class Producer {
     this.produceFx();
 
     // drumbeat
-    const [drumbeatGroup, drumbeatIndex] = selectDrumbeat(this.bpm, this.energy);
-    this.drumbeatTimings.sort(
-      ([_, time], [__, time2]) => Tone.Time(time).toSeconds() - Tone.Time(time2).toSeconds()
-    );
-    let currentStartTime: Time = null;
-    this.drumbeatTimings.forEach(([isStart, time]) => {
-      if (isStart) {
-        if (!currentStartTime) {
-          currentStartTime = time;
+
+    if (params.withDrumBeat){
+      const [drumbeatGroup, drumbeatIndex] = selectDrumbeat(this.bpm, this.energy);
+      this.drumbeatTimings.sort(
+        ([_, time], [__, time2]) => Tone.Time(time).toSeconds() - Tone.Time(time2).toSeconds()
+      );
+      let currentStartTime: Time = null;
+      this.drumbeatTimings.forEach(([isStart, time]) => {
+        if (isStart) {
+          if (!currentStartTime) {
+            currentStartTime = time;
+          }
+        } else if (currentStartTime) {
+          this.addSample(drumbeatGroup, drumbeatIndex, `${currentStartTime}:0`, `${time}:0`);
+          currentStartTime = null;
         }
-      } else if (currentStartTime) {
-        this.addSample(drumbeatGroup, drumbeatIndex, `${currentStartTime}:0`, `${time}:0`);
-        currentStartTime = null;
-      }
-    });
+      });
+    }
 
     const title = params.title || `Lofi track in ${this.tonic} ${this.mode}`;
     const swing = this.swing

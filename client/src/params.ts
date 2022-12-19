@@ -52,6 +52,7 @@ export class ProduceParams {
   outputParams: OutputParams;
   swing: boolean;
   meter: number[] = [4, 4];
+  withDrumBeat: boolean = true;
   public constructor(init?: Partial<ProduceParams>) {
     Object.assign(this, init);
   }

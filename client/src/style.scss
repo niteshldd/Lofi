@@ -225,6 +225,16 @@ $panel-border-radius: 6px;
         height: 52px;
       }
 
+      .drumbeat{
+        display: inline;
+      }
+
+      #drumbeat-check{
+        margin-top: 8px;
+        margin-bottom: 8px;
+        width: 20px;
+      }
+
       .swing-label {
         margin-left: 8px;
         width: 20px;
@@ -250,11 +260,7 @@ $panel-border-radius: 6px;
 
       #chord-notes {
         width: 203px;
-<<<<<<< HEAD
         height: 97px;
-=======
-        height: 180px;
->>>>>>> 318da559ea9ac01ee9af368c04e391b7961a83b7
         margin-left: 5px;
         margin-top: 10px;
       }
