@@ -1,6 +1,7 @@
 import jsonpickle
-
+from dataclasses import dataclass
 from model.constants import *
+from enum import Enum
 
 
 class Output:
@@ -37,3 +38,52 @@ class Output:
                 .replace("[[", "[\n    [") \
                 .replace("]]", "]\n  ]").replace("], [", "],\n    [")
         return json
+
+
+class Instrument(Enum):
+    Piano=0,
+    SoftPiano=1,
+    ElectricPiano=2,
+    Harp=3,
+    AcousticGuitar=4,
+    BassGuitar=5,
+    ElectricGuitar=6,
+    Synth=7,
+    BassElectric=8,
+    Bassoon=9,
+    Cello=10,
+    Clarinet=11,
+    Contrabass=12,
+    Flute=13,
+    FrenchHorn=14,
+    GuitarAcoustic=15,
+    GuitarElectric=16,
+    GuitarNylon=17,
+    Harmonium=18,
+    Organ=19,
+    Saxophone=20,
+    Trombone=21,
+    Trumpet=22,
+    Tuba=23,
+    Violin=24,
+    Xylophone=25
+
+@dataclass
+class InstrumentConfiguration:
+    def __init__(self, instrument, volume=1., octaveShift=0):
+        self.instrument: Instrument = instrument
+        self.volume = volume
+        self.octaveShift = octaveShift
+
+
+@dataclass
+class ProducePreset:
+    def __init__(self, name, bassLine, harmony, firstBeatArpeggio, firstBeatArpeggioPattern, melody, melodyOctaves):
+        self.name = name
+        self.bassLine: InstrumentConfiguration = bassLine
+        self.harmony: InstrumentConfiguration = harmony
+        self.firstBeatArpeggio: InstrumentConfiguration = firstBeatArpeggio
+        self.firstBeatArpeggioPattern = firstBeatArpeggioPattern
+        self.melody: InstrumentConfiguration = melody
+        self.melodyOctaves = melodyOctaves
+

@@ -8,11 +8,10 @@ def decode(model, mu, title=None):
     if title is None:
         title = hash
     else:
-        title = f"{title}: {hash}"
+        title = f"{title}-{hash}"
     output = Output(title, pred_chords, pred_notes, pred_tempo, pred_key, pred_mode, pred_valence, pred_energy)
 
     json = output.to_json(True)
-    print(json)
     return json
 
 

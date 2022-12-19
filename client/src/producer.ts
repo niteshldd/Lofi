@@ -272,7 +272,7 @@ class Producer {
       instrumentNotes: this.instrumentNotes,
       color: randomColor(this.energy + this.valence),
       outputParams: params.outputParams,
-      length: Math.ceil(((this.numMeasures * 4) / this.bpm) * 60),
+      length: Math.ceil(((this.numMeasures * (meter[0] * 4 / meter[1])) / this.bpm) * 60),
       meter: meter
     });
     return track;

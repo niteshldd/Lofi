@@ -1,0 +1,93 @@
+{
+    "NormalEGuitar": {
+        "bassLine": {
+            "instrument": 5,
+            "volume": 0.6,
+            "octaveShift": 0
+        },
+        "harmony": {
+            "instrument": 2,
+            "volume": 0.8,
+            "octaveShift": 0
+        },
+        "firstBeatArpeggio": {
+            "instrument": 0,
+            "volume": 0.1,
+            "octaveShift": -1
+        },
+        "firstBeatArpeggioPattern": [
+            1,
+            5,
+            8,
+            5,
+            10,
+            5,
+            8
+        ],
+        "melody": {
+            "instrument": 6,
+            "volume": 0.6,
+            "octaveShift": 0
+        },
+        "melodyOctaves": false,
+        "name": "NormalEGuitar"
+    },
+    "SoftEPiano": {
+        "bassLine": {
+            "instrument": 5,
+            "volume": 0.6,
+            "octaveShift": 0
+        },
+        "harmony": {
+            "instrument": 2,
+            "volume": 0.8,
+            "octaveShift": 0
+        },
+        "firstBeatArpeggio": {
+            "instrument": 0,
+            "volume": 1,
+            "octaveShift": 0
+        },
+        "firstBeatArpeggioPattern": [
+            1,
+            5,
+            8,
+            9,
+            10
+        ],
+        "melody": {
+            "instrument": 3,
+            "volume": 0.2,
+            "octaveShift": 0
+        },
+        "melodyOctaves": true,
+        "name": "SoftEPiano"
+    },
+    "SoftGuitar": {
+        "bassLine": {
+            "instrument": 5,
+            "volume": 0.5,
+            "octaveShift": 0
+        },
+        "harmony": {
+            "instrument": 2,
+            "volume": 0.6,
+            "octaveShift": 0
+        },
+        "firstBeatArpeggio": null,
+        "firstBeatArpeggioPattern": [
+            1,
+            5,
+            8,
+            9,
+            10
+        ],
+        "melody": {
+            "instrument": 1,
+            "volume": 1,
+            "octaveShift": 1
+        },
+        "melodyOctaves": false,
+        "name": "SoftGuitar"
+    }
+}
