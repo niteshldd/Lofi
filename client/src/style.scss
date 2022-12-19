@@ -250,8 +250,41 @@ $panel-border-radius: 6px;
 
       #chord-notes {
         width: 203px;
-        height: 180px;
+        height: 97px;
         margin-left: 5px;
+        margin-top: 10px;
+      }
+
+      #preset-select {
+        margin-top: 5px;
+        width: 150px;
+        // display: inline;
+      }
+
+      #preset-lock {
+        margin-top: 5px;
+        margin-left: 20px;
+        width: 70px;
+        display: inline;
+      }
+
+      #preset-del {
+        margin-top: 5px;
+        margin-left: 20px;
+        width: 40px;
+        display: inline;
+      }
+
+      #preset-name {
+        width: 132px;
+        display: inline;
+      }
+
+      #preset-add {
+        margin-top: 5px;
+        margin-left: 20px;
+        width: 40px;
+        display: inline;
       }
 
       #chord-notes-label {
@@ -284,6 +317,18 @@ $panel-border-radius: 6px;
     height: 630px;
     overflow-y: scroll;
     margin-bottom: 20px;
+  }
+}
+
+#record-panel {
+  width: 400px;
+
+  .header {
+    display: relative;
+  }
+
+  input {
+    color: black;
   }
 }
 

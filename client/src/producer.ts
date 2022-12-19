@@ -79,8 +79,8 @@ class Producer {
   produce(params: OutputParams): Track {
     // must be 70, 75, 80, 85, 90, 95 or 100
     let bpm = Math.round(params.bpm / 5) * 5;
-    // if (bpm < 70) bpm = 70;
-    // if (bpm > 100) bpm = 100;
+    if (bpm < 70) bpm = 70;
+    if (bpm > 100) bpm = 100;
     this.bpm = bpm;
 
     // tonic note, e.g. 'G'

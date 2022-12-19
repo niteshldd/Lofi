@@ -3,18 +3,16 @@ import Player, { RepeatMode } from './player';
 import Producer from './producer';
 import { ProduceParams, DEFAULT_OUTPUTPARAMS, HIDDEN_SIZE, OutputParams } from './params';
 import { decompress, randn, Chord } from './helper';
-import { decode } from './api';
-import { InstrumentNote, SampleLoop, Track } from './track';
-import { getInstrumentName, Instrument} from './instruments';
-import { InstrumentConfiguration, ProducerPreset } from './producer_presets';
-import JsZip from 'jszip';
-import FileSaver from 'file-saver';
+import { decode, getPresets, addPreset, deletePreset } from './api';
+import { Track } from './track';
+import { getInstrumentName, Instrument } from './instruments';
+import { InstrumentConfiguration, ProducerPreset, selectPreset } from './producer_presets';
 
 const player = new Player();
-// const producer = new Producer();
 var decodeParams = new OutputParams();
 var produceParams = new ProduceParams();
 const numberArray = Array<number>(HIDDEN_SIZE);
+var lockedPreset: ProducerPreset = null;
 // check if local storage is available
 let localStorageAvailable = false;
 try {
@@ -45,7 +43,6 @@ if (localStorageAvailable) {
 }
 const updateLocalStorage = () => {
   if (localStorageAvailable) {
-    // localStorage.setItem('playlist', JSON.stringify(player.playlist.map((t) => t.outputParams)));
     localStorage.setItem('playlist', JSON.stringify(player.playlist.map((t) => t)));
   }
 };
@@ -91,7 +88,6 @@ generateButton.addEventListener('click', async () => {
   for (let i = 0; i < HIDDEN_SIZE; i += 1) {
     numberArray[i] = randn();
   }
-  // const numberArray = sliders.map((n) => n.valueAsNumber);
   let params;
   try {
     params = await decode(numberArray);
@@ -149,7 +145,7 @@ function updateDecodeParams(): OutputParams {
   return decodeParams;
 }
 
-function displayProduceParams(params: ProduceParams) {
+async function displayProduceParams(params: ProduceParams) {
   document.getElementById('tonic').innerText = params.tonic;
   document.getElementById('mode-name').innerText = params.mode;
   document.getElementById('bpm-mapped').innerText = params.bpm.toString();
@@ -174,32 +170,127 @@ function displayProduceParams(params: ProduceParams) {
   const fba_os = document.getElementById('fba-os') as HTMLInputElement;
   const fbap = document.getElementById('fbap') as HTMLInputElement;
   const swing = document.getElementById('swing-check') as HTMLInputElement;
+  const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
+  const presetName = document.getElementById('preset-name') as HTMLInputElement;
 
   note_scales.value = params.note_scales.toString();
   chord_scales.value = params.chord_scales.toString();
   chords.value = params.chords.map((c) => c.notes.join(' ')).join("\n");
-
-  bassLine_inst.selectedIndex = params.preset.bassLine.instrument;
-  bassLine_vol.value = params.preset.bassLine.volume.toString();
-  bassLine_os.value = params.preset.bassLine.octaveShift.toString();
-
-  harmony_inst.selectedIndex = params.preset.harmony.instrument;
-  harmony_vol.value = params.preset.harmony.volume.toString();
-  harmony_os.value = params.preset.harmony.octaveShift.toString();
-
-  melody_inst.selectedIndex = params.preset.melody.instrument;
-  melody_vol.value = params.preset.melody.volume.toString();
-  melody_os.value = params.preset.melody.octaveShift.toString();
-
-  fba_inst.selectedIndex = params.preset.firstBeatArpeggio ? params.preset.firstBeatArpeggio.instrument : -1;
-  fba_vol.value = params.preset.firstBeatArpeggio ? params.preset.firstBeatArpeggio.volume.toString() : "0";
-  fba_os.value = params.preset.firstBeatArpeggio ? params.preset.firstBeatArpeggio.octaveShift.toString() : "0";
-  swing.value = params.swing.toString();
-  fbap.value = params.preset.firstBeatArpeggioPattern.toString();
   meterNumerator.value = params.meter[0].toString();
   meterDenominator.value = params.meter[1].toString();
+  swing.value = params.swing.toString();
 
+  let presetArr = await getPresets();
+  while (presetSelector.firstChild) {
+    presetSelector.removeChild(presetSelector.firstChild);
+  }
+
+  presetArr.forEach((p, i) => {
+    let option = document.createElement('option');
+    option.value = i.toString();
+    option.text = p.name;
+    presetSelector.appendChild(option);
+  });
+
+  presetSelector.onchange = () => {
+    if (presetSelector.selectedIndex >= 0) {
+      let p = presetArr[presetSelector.selectedIndex];
+      presetName.value = p.name;
+      bassLine_inst.selectedIndex = p.bassLine.instrument;
+      bassLine_vol.value = p.bassLine.volume.toString();
+      bassLine_os.value = p.bassLine.octaveShift.toString();
+
+      harmony_inst.selectedIndex = p.harmony.instrument;
+      harmony_vol.value = p.harmony.volume.toString();
+      harmony_os.value = p.harmony.octaveShift.toString();
+
+      melody_inst.selectedIndex = p.melody.instrument;
+      melody_vol.value = p.melody.volume.toString();
+      melody_os.value = p.melody.octaveShift.toString();
+
+      fba_inst.selectedIndex = p.firstBeatArpeggio ? p.firstBeatArpeggio.instrument : -1;
+      fba_vol.value = p.firstBeatArpeggio ? p.firstBeatArpeggio.volume.toString() : "0";
+      fba_os.value = p.firstBeatArpeggio ? p.firstBeatArpeggio.octaveShift.toString() : "0";
+      fbap.value = p.firstBeatArpeggioPattern.toString();
+    }
+  };
+
+  presetSelector.selectedIndex = presetArr.findIndex((p) => p.name == params.preset.name);
+  presetSelector.onchange();
+
+  let preset = new ProducerPreset({
+    bassLine: new InstrumentConfiguration({
+      instrument: bassLine_inst.selectedIndex,
+      volume: parseFloat(bassLine_vol.value),
+      octaveShift: parseInt(bassLine_os.value),
+    }),
+    harmony: new InstrumentConfiguration({
+      instrument: harmony_inst.selectedIndex,
+      volume: parseFloat(harmony_vol.value),
+      octaveShift: parseInt(harmony_os.value),
+    }),
+    melody: new InstrumentConfiguration({
+      instrument: melody_inst.selectedIndex,
+      volume: parseFloat(melody_vol.value),
+      octaveShift: parseInt(melody_os.value),
+    }),
+    firstBeatArpeggio: fba_inst.selectedIndex === -1 ? null : new InstrumentConfiguration({
+      instrument: fba_inst.selectedIndex,
+      volume: parseFloat(fba_vol.value),
+      octaveShift: parseInt(fba_os.value),
+    }),
+    firstBeatArpeggioPattern: fbap.value ? fbap.value.split(',').map((s) => parseInt(s)) : null,
+    melodyOctaves: true,
+    name: presetName.value,
+  });
+
+  bassLine_inst.selectedIndex = preset.bassLine.instrument;
+  bassLine_vol.value = preset.bassLine.volume.toString();
+  bassLine_os.value = preset.bassLine.octaveShift.toString();
+
+  harmony_inst.selectedIndex = preset.harmony.instrument;
+  harmony_vol.value = preset.harmony.volume.toString();
+  harmony_os.value = preset.harmony.octaveShift.toString();
+
+  melody_inst.selectedIndex = preset.melody.instrument;
+  melody_vol.value = preset.melody.volume.toString();
+  melody_os.value = preset.melody.octaveShift.toString();
+
+  fba_inst.selectedIndex = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.instrument : -1;
+  fba_vol.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.volume.toString() : "0";
+  fba_os.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.octaveShift.toString() : "0";
+
+  fbap.value = preset.firstBeatArpeggioPattern ? preset.firstBeatArpeggioPattern.toString() : null;
+
+  params.preset = preset;
+  params.swing = swing.checked;
 };
+
+const addPresetButton = document.getElementById('preset-add');
+addPresetButton.addEventListener('click', async () => {
+  updateProduceParams();
+  try {
+    await addPreset(produceParams.preset);
+  } catch (error) {
+    alert(`Failed to add preset: ${error}`);
+  }
+  displayProduceParams(produceParams);
+});
+
+
+const delPresetButton = document.getElementById('preset-del');
+delPresetButton.addEventListener('click', async () => {
+  const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
+  let presetName = presetSelector.options[presetSelector.selectedIndex].text;
+  try {
+    await deletePreset(presetName);
+  } catch (error) {
+    alert(`Failed to delete preset: ${error}`);
+  }
+  displayProduceParams(produceParams);
+});
+
+
 
 function updateProduceParams(): ProduceParams {
   const title = document.getElementById('hash') as HTMLInputElement;
@@ -221,6 +312,7 @@ function updateProduceParams(): ProduceParams {
   const fbap = document.getElementById('fbap') as HTMLInputElement;
   const meterNumerator = document.getElementById('meter-numerator') as HTMLInputElement;
   const meterDenominator = document.getElementById('meter-denominator') as HTMLInputElement;
+  const presetName = document.getElementById('preset-name') as HTMLInputElement;
 
   produceParams.title = title.value;
   produceParams.tonic = document.getElementById('tonic').innerText;
@@ -268,7 +360,7 @@ function updateProduceParams(): ProduceParams {
 
   let firstBeatArpeggioPatternPrest = fbap.value.split(',').map((c) => +c);
 
-  produceParams.preset = new ProducerPreset({ bassLine: bassPrest, harmony: harmonyPrest, melody: melodyPrest, firstBeatArpeggio: firstBeatArpeggioPrest, firstBeatArpeggioPattern: firstBeatArpeggioPatternPrest });
+  produceParams.preset = new ProducerPreset({ name: presetName.value, bassLine: bassPrest, harmony: harmonyPrest, melody: melodyPrest, firstBeatArpeggio: firstBeatArpeggioPrest, firstBeatArpeggioPattern: firstBeatArpeggioPatternPrest });
   return produceParams
 }
 
@@ -288,11 +380,12 @@ function displayTrack(track: Track) {
     cell = row.insertCell(2);
     cell.innerHTML = track.instrumentNotes[i].time.toString();
     cell = row.insertCell(3);
-    cell.innerHTML = track.instrumentNotes[i].duration?track.instrumentNotes[i].duration.toString():null;
+    cell.innerHTML = track.instrumentNotes[i].duration ? track.instrumentNotes[i].duration.toString() : null;
     cell = row.insertCell(4);
     cell.innerHTML = track.instrumentNotes[i].velocity ? track.instrumentNotes[i].velocity.toString() : null;
   }
 }
+
 
 // function getTrack(): Track {
 //   const track = new Track();
@@ -328,6 +421,11 @@ decodeButton.addEventListener('click', async () => {
   }
   let producer = new Producer();
   produceParams = producer.decode(decodeParams);
+
+  if (lockedPreset) {
+    produceParams.preset = lockedPreset;
+  }
+
   displayProduceParams(produceParams);
 });
 
@@ -605,6 +703,7 @@ volumeBar.addEventListener('input', () => {
 });
 formatInputRange(volumeBar, '#fff');
 
+
 // Export
 const exportButton = document.getElementById('export-button');
 const exportPanel = document.getElementById('export-panel');
@@ -653,45 +752,68 @@ for (const [action, handler] of actionsAndHandlers) {
   }
 }
 
+
+const lockPresetButton = document.getElementById('preset-lock');
+lockPresetButton.addEventListener('click', async () => {
+  const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
+  if (lockPresetButton.innerText === 'lock') {
+    lockPresetButton.innerText = 'unkock';
+    updateProduceParams();
+    lockedPreset = produceParams.preset;
+    presetSelector.disabled = true;
+  } else {
+    lockPresetButton.innerText = 'lock';
+    presetSelector.disabled = false;
+    lockedPreset = null;
+  }
+
+});
+
+
 const recordButton = document.getElementById('record-button');
-const recordNum = document.getElementById('record-num')  as HTMLInputElement;
+const recordNum = document.getElementById('record-num') as HTMLInputElement;
 recordButton.addEventListener('click', async () => {
   loadingAnimation.style.display = null;
-  player.recordBlobs = [];
-  player.recordNum = parseInt(recordNum.value);
-  for (let i = 0; i < player.recordNum; i++) {
-    generateButton.click();
-    /**wait for generating done */
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  player.ifRecord = true;
+  let total = parseInt(recordNum.value);
+  document.getElementById('progress').innerText = `0/${total}`;
+  for (let i = 0; i < total; i++) {
+    try {
+      // generateButton.click();
+      for (let i = 0; i < HIDDEN_SIZE; i += 1) {
+        numberArray[i] = randn();
+      }
+      let params = await decode(numberArray);
+      params.octave = 3;
+      displayDecodeParams(params);
 
-    decodeButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+      // decodeButton.click();
+      let producer = new Producer();
+      let prodParams = producer.decode(params);
+      displayProduceParams(prodParams);
 
-    produceButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 2000+ player.currentTrack.length * 1000 ));
-    
+      // produceButton.click();
+      prodParams.outputParams = params;
+      const track = producer.produce_track(prodParams);
+      displayTrack(track);
+      player.addToPlaylist(track, true);
+      await new Promise((resolve) => setTimeout(resolve, 2000 + player.currentTrack.length * 1000));
+      player.deleteTrack(player.playlist.length - 1)
+      document.getElementById('progress').innerText = `${i + 1}/${total}`;
+    } catch (error) {
+      console.log(error);
+    }
   }
-  const zip = JsZip();
-  player.recordBlobs.forEach((record) => {
-    let fname = record[1];
-    let fblob = record[0];
-    zip.file(fname, fblob);
-  });
-  zip.generateAsync({type: 'blob'}).then(zipFile => {
-    const currentDate = new Date().getTime();
-    const fileName = `recording-${currentDate}.zip`;
-    FileSaver.saveAs(zipFile, fileName);
-  });
 
-  player.recordBlobs = [];
-  player.recordNum = 0;
+  player.ifRecord = false;
+  // document.getElementById('progress').innerText = `${player.recordBlobs.length}/${player.recordNum}`;
   loadingAnimation.style.display = 'none';
 });
 
 
 const clearButton = document.getElementById('clear-button');
 clearButton.addEventListener('click', async () => {
-  for (let i = player.playlist.length; i > 0; i--) {
-      player.deleteTrack(i);
+  for (let i = player.playlist.length; i >= 0; i--) {
+    player.deleteTrack(i);
   };
 });

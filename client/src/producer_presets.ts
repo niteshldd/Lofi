@@ -23,8 +23,19 @@ export class ProducerPreset {
   /** Play the melody in octaves */
   melodyOctaves = false;
 
-  public constructor(init?: Partial<ProducerPreset>) {
-    Object.assign(this, init);
+  name: string;
+
+  public constructor(init?: Partial<ProducerPreset> | Map<string, any>) {
+    if (init instanceof Map) {
+      this.bassLine = new InstrumentConfiguration(init.get('bassLine'));
+      this.harmony = new InstrumentConfiguration(init.get('harmony'));
+      this.firstBeatArpeggio = new InstrumentConfiguration(init.get('firstBeatArpeggio'));
+      this.melody = new InstrumentConfiguration(init.get('melody'));
+      this.firstBeatArpeggioPattern = init.get('firstBeatArpeggioPattern');
+      this.melodyOctaves = init.get('melodyOctaves');
+    } else {
+      Object.assign(this, init);
+    }
   }
 }
 
@@ -38,9 +49,16 @@ export class InstrumentConfiguration {
   /** Octaves to shift up or down */
   octaveShift = 0;
 
-  public constructor(init?: Partial<InstrumentConfiguration>) {
-    Object.assign(this, init);
+  public constructor(init?: Partial<InstrumentConfiguration> | Map<string, any>) {
+    if (init instanceof Map) {
+      this.instrument = init.get('instrument');
+      this.volume = init.get('volume');
+      this.octaveShift = init.get('octaveShift');
+    } else {
+      Object.assign(this, init);
+    }
   }
+
 }
 
 /** Deterministically selects a specific ProducerPreset based on valence and energy */
@@ -74,7 +92,8 @@ export const Preset1: ProducerPreset = new ProducerPreset({
     instrument: Instrument.ElectricGuitar,
     octaveShift: 0,
     volume: 0.6
-  })
+  }),
+  name: 'EGuitar'
 });
 
 /** A softer preset, with epiano melodies */
@@ -96,6 +115,7 @@ export const Preset2: ProducerPreset = new ProducerPreset({
     octaveShift: 1,
     volume: 0.9
   }),
+  name: 'SoftEPiano',
   melodyOctaves: true
 });
 
@@ -112,7 +132,8 @@ export const Preset3: ProducerPreset = new ProducerPreset({
   melody: new InstrumentConfiguration({
     instrument: Instrument.SoftPiano,
     octaveShift: 1
-  })
+  }),
+  name: 'SoftGuitar'
 });
 
 /** Bass patterns, in tuples [startBeat, duration] */

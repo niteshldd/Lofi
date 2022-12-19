@@ -3,6 +3,7 @@ import { getInstrumentFilters, getInstrument, Instrument } from './instruments';
 import * as Samples from './samples';
 import { Track } from './track';
 import { compress } from './helper';
+import { upload } from './api';
 
 
 
@@ -16,10 +17,7 @@ class Player {
   /** Current track in playlist being played */
   currentPlayingIndex: number;
 
-  /** Blob lists to be recorded and downloaded */
-  recordBlobs:  [Blob, string][] = [];
-  // recordBlobs:  [Promise<any>, string][] = [];
-  recordNum: number=2;
+  ifRecord: boolean = false;
 
   /** Current track. Can be undefined */
   get currentTrack() {
@@ -154,7 +152,7 @@ class Player {
       return;
     }
 
-    
+
     await Tone.start();
     const recorder = new Tone.Recorder();
     recorder.start();
@@ -252,44 +250,17 @@ class Player {
     }, 0.1);
 
     this.play();
-    
-    if (this.recordNum == 0) return;
 
-    // if (this.recordNum > this.recordBlobs.length) {
-    //   const recording = recorder.stop();
-    //   setTimeout(async() => {
-    //     await recording;
-    //     // const recording = await recorder.stop();
-    //     // this.recordBlobs.push([recording, `${this.currentTrack.title}.wav`]);
-    //     }, 1000*this.currentTrack.length);
-    //     recording.then(value => this.recordBlobs.push([value, `${this.currentTrack.title}.wav`]));
-    //   }
-
-    if (this.recordNum > this.recordBlobs.length) {
+    if (this.ifRecord) {
       const trackTitle = this.currentTrack.title;
-      await new Promise((resolve) => setTimeout(async() => {
+      await new Promise((resolve) => setTimeout(async () => {
         const recording = await recorder.stop();
-        this.recordBlobs.push([recording, `${trackTitle}.wav`]);
-        }, 1000*(this.currentTrack.length+1)));
-      }
+        upload(recording, `${trackTitle}.webm`);
+        console.log('record done!')
+      }, 1000 * (this.currentTrack.length + 10)));
+    }
 
-    // const recording = Promise.resolve(setTimeout(async() => {return recorder.stop()}, 1000*this.currentTrack.length));
-    // TODO use Promise.all to wait for all recordings to finish
-    // if (this.recordNum == this.recordBlobs.length) {
-    //   const zip = JsZip();
-    //   this.recordBlobs.forEach((record) => {
-    //     let fname = record[1];
-    //     let fblob = record[0];
-    //     zip.file(fname, fblob);
-    //   });
-    //   this.recordBlobs = [];
-    //   this.recordNum = 0;
-    //   zip.generateAsync({type: 'blob'}).then(zipFile => {
-    //     const currentDate = new Date().getTime();
-    //     const fileName = `recording-${currentDate}.zip`;
-    //     FileSaver.saveAs(zipFile, fileName);
-    //   });
-    // }
+
   }
 
   /** Starts playback on the current track; the track must have been loaded */
@@ -333,8 +304,22 @@ class Player {
     this.gain?.disconnect();
     Tone.Transport.cancel();
     Tone.Transport.stop();
-    this.instruments?.forEach((s) => s.dispose());
-    this.samplePlayers?.forEach((s) => s.forEach((t) => t.dispose()));
+    this.instruments?.forEach((s) => {
+      try {
+        s.dispose()
+      } catch (error) {
+        console.log(error);
+      }
+    });
+    this.samplePlayers?.forEach((s) => s.forEach((t) => {
+      try {
+        if (!t.disposed) {
+          t.dispose()
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }));
   }
 
   /** Stops playback and unloads the current track in the UI */

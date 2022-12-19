@@ -203,7 +203,16 @@
               <input id="chord-scales" , class="produce-param" , type="text" value="" size="10">
             </div>
             <div>
-              <!-- <label> preset: </label> -->
+              <div class="inline-div">
+                <select id="preset-select"></select>
+                <button id="preset-lock" class="flat"> lock </button>
+                <button id="preset-del" class="flat"> del </button>
+              </div>
+              <div class="inline-div">
+                <label> new preset: </label>
+                <input id="preset-name" , type="text" value="" size="10"> </input>
+                <button id="preset-add" class="flat"> add </button>
+              </div>
               <div>
                 <label> bassLine: </label>
                 <select id="bassLine-inst" , class="inst">
@@ -244,7 +253,6 @@
                 <label> FBAP: </label>
                 <input id="fbap" , class="produce-param" , type="text" value="" size="10"> </input>
               </div>
-              <!-- <textarea id="preset" , class="produce-param" , type="text" value="" size="10"> -->
             </div>
             <div>
               <label id="chord-notes-label" , style="float:left"> chords: </label>
@@ -275,7 +283,7 @@
               <th> dur </th>
               <th> velocity </th>
             </tr>
-          </table>  
+          </table>
         </div>
       </div>
       <div id="record-panel" class="panel">
@@ -284,7 +292,7 @@
         </div>
         <div>
           <label> Number: </label>
-          <input id="record-num", type="text" value="" size="10"> </input>
+          <input id="record-num" , type="text" value="" size="10"> </input>
         </div>
         <button id="record-button" class="flat">
           <div id="loading-animation" style="display: none">
@@ -293,12 +301,14 @@
             <div></div>
           </div>Start Record
         </button>
+        <label> Progress: </label>
+        <label id="progress" , class="fix-params" , type="text" value="" size="10"> </label>
         <button id="clear-button" class="flat">
-        <div id="loading-animation" style="display: none">
-          <div></div>
-          <div></div>
-          <div></div>
-        </div>Clear
+          <div id="loading-animation" style="display: none">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>Clear
         </button>
       </div>
     </div>
