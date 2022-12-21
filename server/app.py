@@ -1,53 +1,41 @@
+import os
+import sys
+sys.path.append('../')  # to get model
 import json
-
+import yaml
+import model
 import torch
+
+from flask_cors import CORS
+from datetime import datetime
+from multiprocessing import Lock
 from flask import Flask, request, jsonify
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
-from model.lofi2lofi_model import Decoder as Lofi2LofiDecoder
-from model.lyrics2lofi_model import Lyrics2LofiModel
-from server.lofi2lofi_generate import decode
-from server.lyrics2lofi_predict import predict
-# from functools import partial
-import toml
+from lofi2lofi_generate import decode
 
-device = "cpu"
-map_loc = lambda storage, dev: storage.cuda(dev) 
 app = Flask(__name__)
-limiter = Limiter(
-    app,
-    key_func=get_remote_address,
-    default_limits=["30 per minute"]
-)
+cors = CORS(app, resources={r"*": {"origins": "*"}})
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 
+fmutex = Lock()
+def map_loc(storage, dev): return storage.cuda(dev)
+config = yaml.load(open('/workspace/server/config.yaml',
+                   'r'), Loader=yaml.FullLoader)
 
-lofi2lofi_checkpoint = "/workspace/model/checkpoints/lofi2lofi_decoder.pth"
-print("Loading lofi model...", end=" ")
-lofi2lofi_model = Lofi2LofiDecoder(device=device)
-lofi2lofi_model.load_state_dict(torch.load(lofi2lofi_checkpoint, map_location=map_loc))
+preset_path = config['preset']['default']
+port = config['deploy']['port']
 
-name2mod = {"default": {
-    "mod": lofi2lofi_model, 
-    "pth": "/workspace/model/checkpoints/lofi2lofi_decoder.pth"
-    },
-    "v001": None,
-    "pth": "/workspace/model/lofi2lofi/ckpt/lofi2lofi-decoder-epoch200.pth",
-    "device": "cpu"
-    }
+device = config['deploy']['device']
+device = torch.device(device if torch.cuda.is_available() and device>=0 else 'cpu')
 
-
-print(f"Loaded {lofi2lofi_checkpoint}.")
-lofi2lofi_model.to(device)
-lofi2lofi_model.eval()
-
-lyrics2lofi_checkpoint = "/workspace/model/checkpoints/lyrics2lofi.pth"
-print("Loading lyrics2lofi model...", end=" ")
-lyrics2lofi_model = Lyrics2LofiModel(device=device)
-lyrics2lofi_model.load_state_dict(torch.load(lyrics2lofi_checkpoint, map_location=map_loc))
-print(f"Loaded {lyrics2lofi_checkpoint}.")
-lyrics2lofi_model.to(device)
-lyrics2lofi_model.eval()
+models = config['models']
+name2mod = {}
+for cfg in models:
+    mod = getattr(model, cfg['module'])(device=device)
+    mod.load_state_dict(torch.load(cfg['checkpoint'], map_location=map_loc))
+    mod.to(device)
+    mod.eval()
+    name2mod[cfg["name"]] = mod
 
 
 @app.route('/')
@@ -60,25 +48,75 @@ def decode_input():
     input = request.args.get('input')
     number_list = json.loads(input)
 
-    json_output = decode(lofi2lofi_model, torch.tensor([number_list]).float())
+    mod_name = request.args.get('mod_name2', '001')
+    mod = name2mod[mod_name]
 
-    json.dump(json_output, open('/workspace/output.json', 'w'))
-
+    json_output = decode(mod, torch.tensor(
+        [number_list]).float(), title=mod_name)
     response = jsonify(json_output)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
 
 
-@app.route('/predict', methods=['GET'])
-def lyrics_to_track():
-    input = request.args.get('input')
-    json_output = predict(lyrics2lofi_model, input)
-    response = jsonify(json_output)
-    response.headers.add('Access-Control-Allow-Origin', '*')
+@app.route('/upload', methods=['POST'])
+def upload():
+    fname, file = request.files.items().__next__()
+    fpath = f"/workspace/data/Lofi/Records/{datetime.today().strftime('%Y-%m-%d')}/{fname}"
+    os.makedirs(os.path.dirname(fpath), exist_ok=True)
 
+    file.save(fpath)
+    response = jsonify({'fname': fpath})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route('/get_mod_names', methods=['GET'])
+def get_mod_names():
+    response = jsonify(list(name2mod.keys()))
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route('/getPresets', methods=['GET'])
+def get_preset():
+    presets = json.loads(open(preset_path).read())
+    response = jsonify(list(presets.values()))
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route('/addPreset', methods=['POST', 'GET', 'Options'])
+def add_preset():
+    presets = json.loads(open(preset_path).read())
+    preset = request.form['preset']
+    preset = json.loads(preset)
+
+    if preset['name'] in presets:
+        return jsonify({'error': 'Preset name already exists.'}), 402
+
+    presets[preset['name']] = preset
+    with fmutex:
+        with open(preset_path, 'w') as fout:
+            fout.write(json.dumps(presets))
+    response = jsonify(presets)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route('/deletePreset', methods=['POST'])
+def delete_preset():
+    presets = json.loads(open(preset_path).read())
+    name = request.form['presetName']
+    if name in presets:
+        presets.pop(name)
+    with fmutex:
+        with open(preset_path, 'w') as fout:
+            fout.write(json.dumps(presets, indent=4))
+    response = jsonify(presets)
+    response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
 
 if __name__ == '__main__':
-    app.run(port=10224)
+    app.run(host='0.0.0.0', port=port, debug=False)

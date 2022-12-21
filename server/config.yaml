@@ -1,0 +1,41 @@
+deploy:
+  port: 8001
+  device: 0
+preset:
+  default: /workspace/server/presets.json
+  backup: /workspace/server/presets.json.bak
+
+models:
+  - name: default
+    checkpoint: /workspace/model/checkpoints/lofi2lofi_decoder.pth
+    module: Lofi2LofiDecoder
+
+  - name: "001"
+    checkpoint: /workspace/model/checkpoints/lofi2lofi-decoder-epoch200.pth
+    module: Lofi2LofiDecoder
+
+  - name: rnb_500
+    checkpoint: /workspace/model/checkpoints/r-and-b-decoder-epoch500.pth
+    module: Lofi2LofiDecoder
+
+  - name: rnb_1500
+    checkpoint: /workspace/model/checkpoints/r-and-b-decoder-epoch1500.pth
+    module: Lofi2LofiDecoder
+
+  - name: rnb_ft_1370
+    checkpoint: /workspace/model/checkpoints/r-and-b_pretrain-decoder-epoch1370.pth
+    module: Lofi2LofiDecoder
+
+  - name: rock_200
+    checkpoint: /workspace/model/checkpoints/rock-decoder-epoch200.pth
+    module: Lofi2LofiDecoder
+
+  - name: rock_500
+    checkpoint: /workspace/model/checkpoints/rock-decoder-epoch500.pth
+    module: Lofi2LofiDecoder
+
+  - name: rock_ft_1360
+    checkpoint: /workspace/model/checkpoints/rock_pretrain-decoder-epoch1360.pth
+    module: Lofi2LofiDecoder
+
+recordDir: /workspace/data/Lofi/Records
