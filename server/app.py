@@ -43,14 +43,15 @@ def home():
     return 'Server running'
 
 
-@app.route('/decode', methods=['GET'])
+@app.route('/decode', methods=['POST'])
 def decode_input():
     input = request.args.get('input')
-    number_list = json.loads(input)
-
-    mod_name = request.args.get('mod_name2', '001')
+    # number_list = json.loads(input)
+    number_list = request.form['preset']
+    mod_name = request.form['model']
+    # mod_name = request.args.get('mod_name2', '001')
     mod = name2mod[mod_name]
-
+    
     json_output = decode(mod, torch.tensor(
         [number_list]).float(), title=mod_name)
     response = jsonify(json_output)
@@ -71,9 +72,9 @@ def upload():
     return response
 
 
-@app.route('/get_mod_names', methods=['GET'])
+@app.route('/getModels', methods=['GET'])
 def get_mod_names():
-    response = jsonify(list(name2mod.keys()))
+    response = jsonify({'models': list(name2mod.keys())})
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 

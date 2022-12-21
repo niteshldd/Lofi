@@ -3,13 +3,13 @@ import Player, { RepeatMode } from './player';
 import Producer from './producer';
 import { ProduceParams, DEFAULT_OUTPUTPARAMS, HIDDEN_SIZE, OutputParams } from './params';
 import { decompress, randn, Chord } from './helper';
-import { decode, getPresets, addPreset, deletePreset } from './api';
+import { decode, getPresets, addPreset, deletePreset, getModels } from './api';
 import { Track } from './track';
 import { getInstrumentName, Instrument } from './instruments';
-import { InstrumentConfiguration, ProducerPreset, selectPreset } from './producer_presets';
+import { InstrumentConfiguration, ProducerPreset } from './producer_presets';
 
 const player = new Player();
-var decodeParams = new OutputParams();
+const decodeParams = new OutputParams();
 var produceParams = new ProduceParams();
 const numberArray = Array<number>(HIDDEN_SIZE);
 var lockedPreset: ProducerPreset = null;
@@ -79,6 +79,23 @@ instSelectorIds.forEach((id) => {
   instSelector.selectedIndex = -1;
 });
 
+
+async function initModelList() {
+  const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
+  const models = await getModels();
+  models.forEach((model) => {
+    let option = document.createElement('option');
+    option.text = model;
+    option.value = model;
+    modelSelect.add(option);
+  });
+  modelSelect.selectedIndex = 0;
+}
+
+window.onload = async () => {
+  await initModelList();
+}
+
 // Generate button
 const generateButton = document.getElementById('generate-button') as HTMLButtonElement;
 const loadingAnimation = document.getElementById('loading-animation');
@@ -89,8 +106,9 @@ generateButton.addEventListener('click', async () => {
     numberArray[i] = randn();
   }
   let params;
+  let modelSelect = document.getElementById('model-select') as HTMLSelectElement;
   try {
-    params = await decode(numberArray);
+    params = await decode(numberArray, modelSelect.value);
     params.octave = 3;
   } catch (err) {
     generateButton.textContent = 'Error!';
@@ -145,6 +163,7 @@ function updateDecodeParams(): OutputParams {
   return decodeParams;
 }
 
+
 async function displayProduceParams(params: ProduceParams) {
   document.getElementById('tonic').innerText = params.tonic;
   document.getElementById('mode-name').innerText = params.mode;
@@ -193,33 +212,54 @@ async function displayProduceParams(params: ProduceParams) {
     option.text = p.name;
     presetSelector.appendChild(option);
   });
+  
 
   presetSelector.onchange = () => {
     if (presetSelector.selectedIndex >= 0) {
-      let p = presetArr[presetSelector.selectedIndex];
-      presetName.value = p.name;
-      bassLine_inst.selectedIndex = p.bassLine.instrument;
-      bassLine_vol.value = p.bassLine.volume.toString();
-      bassLine_os.value = p.bassLine.octaveShift.toString();
+      let preset = presetArr[presetSelector.selectedIndex];
+      presetName.value = preset.name;
+      bassLine_inst.selectedIndex = preset.bassLine.instrument;
+      bassLine_vol.value = preset.bassLine.volume.toString();
+      bassLine_os.value = preset.bassLine.octaveShift.toString();
 
-      harmony_inst.selectedIndex = p.harmony.instrument;
-      harmony_vol.value = p.harmony.volume.toString();
-      harmony_os.value = p.harmony.octaveShift.toString();
+      harmony_inst.selectedIndex = preset.harmony.instrument;
+      harmony_vol.value = preset.harmony.volume.toString();
+      harmony_os.value = preset.harmony.octaveShift.toString();
 
-      melody_inst.selectedIndex = p.melody.instrument;
-      melody_vol.value = p.melody.volume.toString();
-      melody_os.value = p.melody.octaveShift.toString();
+      melody_inst.selectedIndex = preset.melody.instrument;
+      melody_vol.value = preset.melody.volume.toString();
+      melody_os.value = preset.melody.octaveShift.toString();
 
-      fba_inst.selectedIndex = p.firstBeatArpeggio ? p.firstBeatArpeggio.instrument : -1;
-      fba_vol.value = p.firstBeatArpeggio ? p.firstBeatArpeggio.volume.toString() : "0";
-      fba_os.value = p.firstBeatArpeggio ? p.firstBeatArpeggio.octaveShift.toString() : "0";
-      fbap.value = p.firstBeatArpeggioPattern.toString();
+      fba_inst.selectedIndex = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.instrument : -1;
+      fba_vol.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.volume.toString() : "0";
+      fba_os.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.octaveShift.toString() : "0";
+      fbap.value = preset.firstBeatArpeggioPattern.toString();
     }
   };
 
   presetSelector.selectedIndex = presetArr.findIndex((p) => p.name == params.preset.name);
-  presetSelector.onchange();
 
+  if (presetSelector.selectedIndex >= 0) {
+    let preset = presetArr[presetSelector.selectedIndex];
+    presetName.value = preset.name;
+    bassLine_inst.selectedIndex = preset.bassLine.instrument;
+    bassLine_vol.value = preset.bassLine.volume.toString();
+    bassLine_os.value = preset.bassLine.octaveShift.toString();
+
+    harmony_inst.selectedIndex = preset.harmony.instrument;
+    harmony_vol.value = preset.harmony.volume.toString();
+    harmony_os.value = preset.harmony.octaveShift.toString();
+
+    melody_inst.selectedIndex = preset.melody.instrument;
+    melody_vol.value = preset.melody.volume.toString();
+    melody_os.value = preset.melody.octaveShift.toString();
+
+    fba_inst.selectedIndex = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.instrument : -1;
+    fba_vol.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.volume.toString() : "0";
+    fba_os.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.octaveShift.toString() : "0";
+    fbap.value = preset.firstBeatArpeggioPattern.toString();
+  }
+  
   let preset = new ProducerPreset({
     bassLine: new InstrumentConfiguration({
       instrument: bassLine_inst.selectedIndex,
@@ -444,6 +484,11 @@ produceButton.addEventListener('click', async () => {
   producer.decode(decodeParams)
   const track = producer.produce_track(produceParams);
   displayTrack(track);
+
+  if(player.playlist.length > 50){
+    player.deleteTrack(0)
+  }
+
   player.addToPlaylist(track, true);
   playlistContainer.scrollTop = playlistContainer.scrollHeight;
   loadingAnimation.style.display = 'none';
@@ -600,7 +645,6 @@ const updatePlaylistDisplay = () => {
     trackElement.addEventListener('click', async (e: MouseEvent) => {
       if ((e.target as HTMLElement).tagName === 'BUTTON') return;
       player.playTrack(i);
-      console.log(track.outputParams);
     });
 
     const deleteButton = trackElement.querySelector('.delete-button');
@@ -758,29 +802,36 @@ for (const [action, handler] of actionsAndHandlers) {
 }
 
 
-const lockPresetButton = document.getElementById('preset-lock');
-lockPresetButton.addEventListener('click', async () => {
+const lockPresetCheck = document.getElementById('lock-check') as HTMLInputElement;
+lockPresetCheck.addEventListener('change', async () => {
   const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
-  if (lockPresetButton.innerText === 'lock') {
-    lockPresetButton.innerText = 'unkock';
+  if (lockPresetCheck.checked) {
     updateProduceParams();
     lockedPreset = produceParams.preset;
     presetSelector.disabled = true;
   } else {
-    lockPresetButton.innerText = 'lock';
     presetSelector.disabled = false;
     lockedPreset = null;
   }
+});
 
+const recordCheck = document.getElementById('record-check') as HTMLInputElement;
+recordCheck.checked = true;
+recordCheck.addEventListener('change', async () => {
+  if (recordCheck.checked) {
+    player.ifRecord = true;
+  }else{
+    player.ifRecord = false;
+  }
 });
 
 
-const recordButton = document.getElementById('record-button');
-const recordNum = document.getElementById('record-num') as HTMLInputElement;
-recordButton.addEventListener('click', async () => {
+const loopButton = document.getElementById('loop-button');
+const loopNum = document.getElementById('loop-num') as HTMLInputElement;
+loopButton.addEventListener('click', async () => {
   loadingAnimation.style.display = null;
   player.ifRecord = true;
-  let total = parseInt(recordNum.value);
+  let total = parseInt(loopNum.value);
   document.getElementById('progress').innerText = `0/${total}`;
   for (let i = 0; i < total; i++) {
     try {
@@ -788,13 +839,19 @@ recordButton.addEventListener('click', async () => {
       for (let i = 0; i < HIDDEN_SIZE; i += 1) {
         numberArray[i] = randn();
       }
-      let params = await decode(numberArray);
+      let modelSelect = document.getElementById('model-select') as HTMLSelectElement;
+      let params = await decode(numberArray, modelSelect.value);
       params.octave = 3;
       displayDecodeParams(params);
 
       // decodeButton.click();
       let producer = new Producer();
       let prodParams = producer.decode(params);
+
+      if (lockedPreset) {
+        prodParams.preset = lockedPreset;
+      }
+
       displayProduceParams(prodParams);
 
       // produceButton.click();
@@ -803,7 +860,7 @@ recordButton.addEventListener('click', async () => {
       displayTrack(track);
       player.addToPlaylist(track, true);
       await new Promise((resolve) => setTimeout(resolve, 2000 + player.currentTrack.length * 1000));
-      player.deleteTrack(player.playlist.length - 1)
+      // player.deleteTrack(player.playlist.length - 1)
       document.getElementById('progress').innerText = `${i + 1}/${total}`;
     } catch (error) {
       console.log(error);
@@ -811,7 +868,6 @@ recordButton.addEventListener('click', async () => {
   }
 
   player.ifRecord = false;
-  // document.getElementById('progress').innerText = `${player.recordBlobs.length}/${player.recordNum}`;
   loadingAnimation.style.display = 'none';
 });
 

@@ -256,7 +256,6 @@ class Player {
       await new Promise((resolve) => setTimeout(async () => {
         const recording = await recorder.stop();
         upload(recording, `${trackTitle}.webm`);
-        console.log('record done!')
       }, 1000 * (this.currentTrack.length + 10)));
     }
 

@@ -26,6 +26,7 @@ body {
   height: 100%;
 }
 
+
 @mixin background($url) {
   background: url($url), black;
   background-repeat: no-repeat;
@@ -81,11 +82,52 @@ $panel-border-radius: 6px;
   }
 }
 
+input {
+  vertical-align: middle;
+}
+
 #main {
   display: flex;
   flex-direction: row;
   gap: 12px;
   // flex-direction: column;
+  
+  #control-panel {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    height: $height - 16px;
+    padding: 4px 8px 8px 8px;
+    justify-content: space-between;
+    color: black;
+  
+    .header {
+      display: relative;
+    }
+  
+    input {
+      color: black;
+    }
+
+    #loop {
+      margin: 10px;
+    }
+
+    #loop-num{
+      width: 50px;
+      margin: 10px;
+    }
+
+    #loop-button {
+      margin-top: 10px;
+      width: 100%;
+    }
+    #record-check {
+      margin-left: 20px;
+    }
+
+
+  }
 }
 
 #editor {
@@ -115,6 +157,21 @@ $panel-border-radius: 6px;
 
   .header {
     display: relative;
+  }
+
+  #decode-header-text{
+    margin-left: 100px;
+  }
+  
+  #model-select {
+    display: inline;
+    width: 90px;
+    color: black;
+    background-color: white;
+  }
+
+  #model-select option {
+    color: black;
   }
 
   #decode-text {
@@ -226,6 +283,7 @@ $panel-border-radius: 6px;
       }
 
       .drumbeat{
+        margin-left: 12px;
         display: inline;
       }
 
@@ -235,8 +293,13 @@ $panel-border-radius: 6px;
         width: 20px;
       }
 
-      .swing-label {
-        margin-left: 8px;
+      #swing-label {
+        width: 20px;
+      }
+
+      #swing-check{
+        vertical-align: middle;
+        margin-left: 40px;
         width: 20px;
       }
 
@@ -249,7 +312,7 @@ $panel-border-radius: 6px;
       }
 
       .short-label {
-        width: 30px;
+        width: auto;
         margin-top: 11px;
         margin-bottom: 8px;
       }
@@ -260,7 +323,7 @@ $panel-border-radius: 6px;
 
       #chord-notes {
         width: 203px;
-        height: 97px;
+        height: 110px;
         margin-left: 5px;
         margin-top: 10px;
       }
@@ -271,16 +334,24 @@ $panel-border-radius: 6px;
         // display: inline;
       }
 
-      #preset-lock {
-        margin-top: 5px;
+      #lock{
+        width: 100px;
+        display: inline;
+      }
+
+      #lock-label{
         margin-left: 20px;
-        width: 70px;
+        width: 30px;
+        display: inline;
+      }
+
+      #lock-check {
+        width: 20px;
         display: inline;
       }
 
       #preset-del {
-        margin-top: 5px;
-        margin-left: 20px;
+        margin-left: 29px;
         width: 40px;
         display: inline;
       }
@@ -330,17 +401,6 @@ $panel-border-radius: 6px;
   }
 }
 
-#record-panel {
-  width: 400px;
-
-  .header {
-    display: relative;
-  }
-
-  input {
-    color: black;
-  }
-}
 
 #player-panel {
   display: flex;
@@ -585,6 +645,12 @@ $panel-border-radius: 6px;
         top: 2px;
         right: 4px;
         background-image: url('icons/export.svg');
+      }
+      #clear-button {
+        position: absolute;
+        top: 2px;
+        right: 25px;
+        background-image: url('icons/delete.svg');
       }
     }
 

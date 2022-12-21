@@ -94,16 +94,54 @@
         <div id="playlist" class="panel">
           <div id="playlist-header" class="header">
             <div id="playlist-header-text" class="header-text">PLAYLIST</div>
+            <button id="clear-button" class="plain">
+              <div id="loading-animation" style="display: none">
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </button>
             <button id="export-button" class="plain" title="Share this playlist"></button>
           </div>
           <div id="playlist-tracks"></div>
         </div>
       </div>
+      <div id="control-panel" class="panel">
+        <div class="header">
+          <div class="header-text">CONTROL</div>
+        </div>
+        <div id="loop"> 
+          <div>
+            <label> loop: </label>
+            <input id="loop-num" , type="text" value="" size="10"> </input>
+          </div>
+          <div>
+            <label> record </label>
+            <label>
+              <input id="record-check" , type="checkbox"> 
+            </label>
+          </div>
+          <button id="loop-button" class="flat">
+            <div id="loading-animation" style="display: none">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>Start Loop
+          </button>
+        </div>
+        <div>
+          <label> progress: </label>
+          <label id="progress" , class="fix-params" , type="text" value="" size="10"> </label>
+        </div>
+      </div>
     </div>
     <div id="editor">
       <div id="decode-panel" class="panel">
-        <div class="header">
-          <div class="header-text">DECODE</div>
+        <div id="decode-header", class="header">
+          <div id="decode-header-text", class="header-text"> DECODE 
+            <select id="model-select"> </select>
+          </div>
+          
         </div>
         <button id="generate-button" class="flat">
           <div id="loading-animation" style="display: none">
@@ -184,18 +222,14 @@
               <label class="fix-params"> bpm: </label>
               <label id="bpm-mapped" , class="fix-params" , type="text" value="" size="10"> </label>
               <label id="swing-label"> swing: </label>
-              <label class="switch">
-                <input id="swing-check" , type="checkbox">
-              </label>
+              <input id="swing-check" , type="checkbox" size="10"></input>
             </div>
             <div>
               <label class="fix-params"> meter: </label>
               <input id="meter-numerator" , class="fix-params" , type="text" value="" size="10"> </label>
               <input id="meter-denominator" , class="fix-params" , type="text" value="" size="10"> </label>
               <label class="drumbeat"> drumbeat: </label>
-              <label class="drumbeat">
-                <input id="drumbeat-check" , type="checkbox"> 
-              </label>
+              <input id="drumbeat-check" , type="checkbox"></input>
             </div>
             <div>
               <label> note scales: </label>
@@ -208,8 +242,12 @@
             <div>
               <div class="inline-div">
                 <select id="preset-select"></select>
-                <button id="preset-lock" class="flat"> lock </button>
-                <button id="preset-del" class="flat"> del </button>
+                <div id="lock">
+                  <label id="lock-label"> lock </label>
+                  <input id="lock-check" , type="checkbox"> </input>
+                  <button id="preset-del" class="flat"> del </button>
+                </div>
+                
               </div>
               <div class="inline-div">
                 <label> new preset: </label>
@@ -288,31 +326,6 @@
             </tr>
           </table>
         </div>
-      </div>
-      <div id="record-panel" class="panel">
-        <div class="header">
-          <div class="header-text">RECORD</div>
-        </div>
-        <div>
-          <label> Number: </label>
-          <input id="record-num" , type="text" value="" size="10"> </input>
-        </div>
-        <button id="record-button" class="flat">
-          <div id="loading-animation" style="display: none">
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>Start Record
-        </button>
-        <label> Progress: </label>
-        <label id="progress" , class="fix-params" , type="text" value="" size="10"> </label>
-        <button id="clear-button" class="flat">
-          <div id="loading-animation" style="display: none">
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>Clear
-        </button>
       </div>
     </div>
     <!-- <div id="footer"> -->

@@ -169,8 +169,8 @@ class Producer {
   /** decode params */
   decode(params: OutputParams) {
     let bpm = Math.round(params.bpm / 5) * 5;
-    // if (bpm < 70) bpm = 70;
-    // if (bpm > 100) bpm = 100;
+    if (bpm < 70) bpm = 70;
+    if (bpm > 100) bpm = 100;
     this.bpm = bpm;
 
     // tonic note, e.g. 'G'
