@@ -45,11 +45,8 @@ def home():
 
 @app.route('/decode', methods=['POST'])
 def decode_input():
-    input = request.args.get('input')
-    # number_list = json.loads(input)
-    number_list = request.form['preset']
+    number_list = json.loads(request.form['input'])
     mod_name = request.form['model']
-    # mod_name = request.args.get('mod_name2', '001')
     mod = name2mod[mod_name]
     
     json_output = decode(mod, torch.tensor(
