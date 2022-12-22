@@ -164,6 +164,24 @@ function updateDecodeParams(): OutputParams {
 }
 
 
+async function loadPresetSelect(presetArr: Array<ProducerPreset> | null) {
+  const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
+  if (!presetArr) {
+    presetArr = await getPresets();
+  }
+  while (presetSelector.firstChild) {
+    presetSelector.removeChild(presetSelector.firstChild);
+  }
+
+  presetArr.forEach((p, i) => {
+    let option = document.createElement('option');
+    option.value = i.toString();
+    option.text = p.name;
+    presetSelector.appendChild(option);
+  });
+  presetSelector.selectedIndex = presetSelector.children.length - 1;
+}
+
 async function displayProduceParams(params: ProduceParams) {
   document.getElementById('tonic').innerText = params.tonic;
   document.getElementById('mode-name').innerText = params.mode;
@@ -202,18 +220,7 @@ async function displayProduceParams(params: ProduceParams) {
   swing.value = params.swing.toString();
 
   let presetArr = await getPresets();
-  while (presetSelector.firstChild) {
-    presetSelector.removeChild(presetSelector.firstChild);
-  }
-
-  presetArr.forEach((p, i) => {
-    let option = document.createElement('option');
-    option.value = i.toString();
-    option.text = p.name;
-    presetSelector.appendChild(option);
-  });
-  
-
+  await loadPresetSelect(presetArr);
   presetSelector.onchange = () => {
     if (presetSelector.selectedIndex >= 0) {
       let preset = presetArr[presetSelector.selectedIndex];
@@ -313,6 +320,8 @@ addPresetButton.addEventListener('click', async () => {
   updateProduceParams();
   try {
     await addPreset(produceParams.preset);
+    let presetArr = await getPresets();
+    await loadPresetSelect(presetArr);
   } catch (error) {
     alert(`Failed to add preset: ${error}`);
   }
@@ -326,6 +335,9 @@ delPresetButton.addEventListener('click', async () => {
   let presetName = presetSelector.options[presetSelector.selectedIndex].text;
   try {
     await deletePreset(presetName);
+    let presetArr = await getPresets();
+    await loadPresetSelect(presetArr);
+    presetSelector.selectedIndex = -1;
   } catch (error) {
     alert(`Failed to delete preset: ${error}`);
   }
@@ -860,8 +872,12 @@ loopButton.addEventListener('click', async () => {
       displayTrack(track);
       player.addToPlaylist(track, true);
       await new Promise((resolve) => setTimeout(resolve, 2000 + player.currentTrack.length * 1000));
-      // player.deleteTrack(player.playlist.length - 1)
       document.getElementById('progress').innerText = `${i + 1}/${total}`;
+
+      if(player.playlist.length > 50) {
+        player.deleteTrack(0)
+      }
+
     } catch (error) {
       console.log(error);
     }
