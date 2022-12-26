@@ -38,4 +38,4 @@ models:
     checkpoint: /workspace/model/checkpoints/rock_pretrain-decoder-epoch1360.pth
     module: Lofi2LofiDecoder
 
-recordDir: /workspace/data/Lofi/Records
+recordDir: /workspace/data/Records

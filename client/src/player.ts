@@ -129,7 +129,11 @@ class Player {
     this.currentPlayingIndex = playlistIndex;
     this.onTrackChange();
     this.seek(0);
-    this.stop();
+    try{
+      this.stop();
+    } catch (err) {
+      console.log(err);
+    }
     this.load();
   }
 
@@ -255,7 +259,7 @@ class Player {
       const trackTitle = this.currentTrack.title;
       await new Promise((resolve) => setTimeout(async () => {
         const recording = await recorder.stop();
-        upload(recording, `${trackTitle}.webm`);
+        await upload(recording, `${trackTitle}.webm`);
       }, 1000 * (this.currentTrack.length + 10)));
     }
 

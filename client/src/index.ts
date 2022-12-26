@@ -6,7 +6,7 @@ import { decompress, randn, Chord } from './helper';
 import { decode, getPresets, addPreset, deletePreset, getModels } from './api';
 import { Track } from './track';
 import { getInstrumentName, Instrument } from './instruments';
-import { InstrumentConfiguration, ProducerPreset } from './producer_presets';
+import { InstrumentConfiguration, ProducerPreset, selectPreset } from './producer_presets';
 
 const player = new Player();
 const decodeParams = new OutputParams();
@@ -92,9 +92,6 @@ async function initModelList() {
   modelSelect.selectedIndex = 0;
 }
 
-window.onload = async () => {
-  await initModelList();
-}
 
 // Generate button
 const generateButton = document.getElementById('generate-button') as HTMLButtonElement;
@@ -164,8 +161,47 @@ function updateDecodeParams(): OutputParams {
 }
 
 
+const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
+presetSelector.addEventListener('change', async (e) => {
+  const presetName = document.getElementById('preset-name') as HTMLInputElement;
+  const bassLine_inst = document.getElementById('bassLine-inst') as HTMLSelectElement;
+  const bassLine_vol = document.getElementById('bassLine-vol') as HTMLInputElement;
+  const bassLine_os = document.getElementById('bassLine-os') as HTMLInputElement;
+  const harmony_inst = document.getElementById('harmony-inst') as HTMLSelectElement;
+  const harmony_vol = document.getElementById('harmony-vol') as HTMLInputElement;
+  const harmony_os = document.getElementById('harmony-os') as HTMLInputElement;
+  const melody_inst = document.getElementById('melody-inst') as HTMLSelectElement;
+  const melody_vol = document.getElementById('melody-vol') as HTMLInputElement;
+  const melody_os = document.getElementById('melody-os') as HTMLInputElement;
+  const fba_inst = document.getElementById('fba-inst') as HTMLSelectElement;
+  const fba_vol = document.getElementById('fba-vol') as HTMLInputElement;
+  const fba_os = document.getElementById('fba-os') as HTMLInputElement;
+  const fbap = document.getElementById('fbap') as HTMLInputElement;
+  if (presetSelector.selectedIndex >= 0) {
+    let presetArr = await getPresets();
+    let preset = presetArr[presetSelector.selectedIndex];
+    presetName.value = preset.name;
+    bassLine_inst.selectedIndex = preset.bassLine.instrument;
+    bassLine_vol.value = preset.bassLine.volume.toString();
+    bassLine_os.value = preset.bassLine.octaveShift.toString();
+
+    harmony_inst.selectedIndex = preset.harmony.instrument;
+    harmony_vol.value = preset.harmony.volume.toString();
+    harmony_os.value = preset.harmony.octaveShift.toString();
+
+    melody_inst.selectedIndex = preset.melody.instrument;
+    melody_vol.value = preset.melody.volume.toString();
+    melody_os.value = preset.melody.octaveShift.toString();
+
+    fba_inst.selectedIndex = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.instrument : -1;
+    fba_vol.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.volume.toString() : "0";
+    fba_os.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.octaveShift.toString() : "0";
+    fbap.value = preset.firstBeatArpeggioPattern.toString();
+  }
+});
+
+
 async function loadPresetSelect(presetArr: Array<ProducerPreset> | null) {
-  const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
   if (!presetArr) {
     presetArr = await getPresets();
   }
@@ -180,12 +216,14 @@ async function loadPresetSelect(presetArr: Array<ProducerPreset> | null) {
     presetSelector.appendChild(option);
   });
   presetSelector.selectedIndex = presetSelector.children.length - 1;
+  
 }
 
 async function displayProduceParams(params: ProduceParams) {
   document.getElementById('tonic').innerText = params.tonic;
   document.getElementById('mode-name').innerText = params.mode;
   document.getElementById('bpm-mapped').innerText = params.bpm.toString();
+  const title = document.getElementById('hash') as HTMLInputElement;
   const meterNumerator = document.getElementById('meter-numerator') as HTMLInputElement;
   const meterDenominator = document.getElementById('meter-denominator') as HTMLInputElement;
 
@@ -207,10 +245,10 @@ async function displayProduceParams(params: ProduceParams) {
   const fba_os = document.getElementById('fba-os') as HTMLInputElement;
   const fbap = document.getElementById('fbap') as HTMLInputElement;
   const swing = document.getElementById('swing-check') as HTMLInputElement;
-  const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
   const presetName = document.getElementById('preset-name') as HTMLInputElement;
   const drumbeatCheck = document.getElementById('drumbeat-check') as HTMLInputElement;
 
+  title.value = params.title;
   drumbeatCheck.checked = params.withDrumBeat;
   note_scales.value = params.note_scales.toString();
   chord_scales.value = params.chord_scales.toString();
@@ -221,29 +259,7 @@ async function displayProduceParams(params: ProduceParams) {
 
   let presetArr = await getPresets();
   await loadPresetSelect(presetArr);
-  presetSelector.onchange = () => {
-    if (presetSelector.selectedIndex >= 0) {
-      let preset = presetArr[presetSelector.selectedIndex];
-      presetName.value = preset.name;
-      bassLine_inst.selectedIndex = preset.bassLine.instrument;
-      bassLine_vol.value = preset.bassLine.volume.toString();
-      bassLine_os.value = preset.bassLine.octaveShift.toString();
-
-      harmony_inst.selectedIndex = preset.harmony.instrument;
-      harmony_vol.value = preset.harmony.volume.toString();
-      harmony_os.value = preset.harmony.octaveShift.toString();
-
-      melody_inst.selectedIndex = preset.melody.instrument;
-      melody_vol.value = preset.melody.volume.toString();
-      melody_os.value = preset.melody.octaveShift.toString();
-
-      fba_inst.selectedIndex = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.instrument : -1;
-      fba_vol.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.volume.toString() : "0";
-      fba_os.value = preset.firstBeatArpeggio ? preset.firstBeatArpeggio.octaveShift.toString() : "0";
-      fbap.value = preset.firstBeatArpeggioPattern.toString();
-    }
-  };
-
+  
   presetSelector.selectedIndex = presetArr.findIndex((p) => p.name == params.preset.name);
 
   if (presetSelector.selectedIndex >= 0) {
@@ -331,7 +347,6 @@ addPresetButton.addEventListener('click', async () => {
 
 const delPresetButton = document.getElementById('preset-del');
 delPresetButton.addEventListener('click', async () => {
-  const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
   let presetName = presetSelector.options[presetSelector.selectedIndex].text;
   try {
     await deletePreset(presetName);
@@ -482,7 +497,8 @@ decodeButton.addEventListener('click', async () => {
   if (lockedPreset) {
     produceParams.preset = lockedPreset;
   }
-
+  
+  produceParams.title = decodeParams.title.split('-')[0] + '-' + produceParams.preset.name + '-' + decodeParams.title.split('-')[1];
   displayProduceParams(produceParams);
 });
 
@@ -816,7 +832,6 @@ for (const [action, handler] of actionsAndHandlers) {
 
 const lockPresetCheck = document.getElementById('lock-check') as HTMLInputElement;
 lockPresetCheck.addEventListener('change', async () => {
-  const presetSelector = document.getElementById('preset-select') as HTMLSelectElement;
   if (lockPresetCheck.checked) {
     updateProduceParams();
     lockedPreset = produceParams.preset;
@@ -864,6 +879,8 @@ loopButton.addEventListener('click', async () => {
         prodParams.preset = lockedPreset;
       }
 
+      prodParams.title = prodParams.title.split('-')[0] + '-' + prodParams.preset.name + '-' + prodParams.title.split('-')[1];
+
       displayProduceParams(prodParams);
 
       // produceButton.click();
@@ -894,3 +911,10 @@ clearButton.addEventListener('click', async () => {
     player.deleteTrack(i);
   };
 });
+
+window.onload = async () => {
+  await initModelList();
+  let presetArr = await getPresets();
+  await loadPresetSelect(presetArr);
+  presetSelector.selectedIndex = -1;
+}
